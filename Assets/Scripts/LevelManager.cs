@@ -9,14 +9,16 @@ namespace TMKOC.SafetySquad
     {
         [SerializeField] private Button playSchoolBackButton;
         [SerializeField] private GameObject[] levels;
+        [SerializeField] private Objects correctObject;
         public int currentLevelIndex { get; private set; }
+        public Objects CorrectObject => correctObject;
         private void StartLevel() => GameManager.Instance.InvokeLevelStart();
 
 
         private void Awake()
         {
             SetDataSaver();
-            PlayschoolCommon.Instance.SpawnplayschoolWinLosePanel();
+         //   PlayschoolCommon.Instance.SpawnplayschoolWinLosePanel();
             playSchoolBackButton.onClick.AddListener(() => SceneManager.LoadScene(TMKOCPlaySchoolConstants.TMKOCPlayMainMenu));
         }
         private void Start()
