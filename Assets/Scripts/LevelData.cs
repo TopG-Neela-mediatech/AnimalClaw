@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace tmkoc.claw
 {
-    [CreateAssetMenu(fileName = "LevelData", menuName = "TMKOC/SafetySquad/Level Data")]
+    [CreateAssetMenu(fileName = "LevelData", menuName = "LevelDataSO")]
     public class LevelData : ScriptableObject
     {
         [SerializeField] private ObjectController[] options;

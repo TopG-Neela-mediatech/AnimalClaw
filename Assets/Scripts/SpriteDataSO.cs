@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace tmkoc.claw
 {
-    [CreateAssetMenu(fileName = "SpriteDataSO", menuName = "TMKOC/SafetySquad/Sprite Data")]
+    [CreateAssetMenu(fileName = "SpriteData", menuName = "SpriteDataSO")]
     public class SpriteDataSO : ScriptableObject
     {
         [SerializeField] private Objects objectType;

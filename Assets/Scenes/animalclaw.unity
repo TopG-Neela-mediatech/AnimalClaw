@@ -469,7 +469,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playSchoolBackButton: {fileID: 1601103616}
   levels: []
-  correctObject: 10
+  currentLevelData: {fileID: 0}
+  objectControllerPrefab: {fileID: 0}
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0
@@ -976,6 +977,55 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &823645537
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 823645538}
+  - component: {fileID: 823645539}
+  m_Layer: 0
+  m_Name: LivesController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &823645538
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 823645537}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1599070939}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &823645539
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 823645537}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d20f6f5ae3380e4ca8f8ebfe1cc2c44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  livesParent: {fileID: 0}
+  livesText: {fileID: 0}
+  shakeDuration: 0.3
+  shakeStrength: 20
+  shakeVibrato: 10
 --- !u!1 &841812624
 GameObject:
   m_ObjectHideFlags: 0
@@ -1218,6 +1268,7 @@ Transform:
   - {fileID: 581169580}
   - {fileID: 589504276}
   - {fileID: 1840282954}
+  - {fileID: 823645538}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1601103614
@@ -1619,12 +1670,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   clawImage: {fileID: 704419723}
   machineImage: {fileID: 688106902}
-  objectControllers:
-  - {fileID: 747534098}
-  - {fileID: 1636101390}
-  - {fileID: 841812626}
+  objectParent: {fileID: 0}
   aimMarkerImage: {fileID: 487069957}
   stopButton: {fileID: 1411279958}
+  livesController: {fileID: 0}
   clawDropStartOffsetY: 300
   clawDropDuration: 1
   markerMoveDuration: 0.5
