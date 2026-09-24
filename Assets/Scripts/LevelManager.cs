@@ -3,15 +3,18 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace TMKOC.SafetySquad
+namespace tmkoc.claw
 {
     public class LevelManager : MonoBehaviour
     {
         [SerializeField] private Button playSchoolBackButton;
         [SerializeField] private GameObject[] levels;
-        [SerializeField] private Objects correctObject;
+        [SerializeField] private LevelData currentLevelData;
+        [SerializeField] private ObjectController objectControllerPrefab;
         public int currentLevelIndex { get; private set; }
-        public Objects CorrectObject => correctObject;
+        public Objects CorrectObject => currentLevelData.CorrectObject;
+        public LevelData CurrentLevelData => currentLevelData;
+        public ObjectController ObjectControllerPrefab => objectControllerPrefab;
         private void StartLevel() => GameManager.Instance.InvokeLevelStart();
 
 
@@ -33,7 +36,7 @@ namespace TMKOC.SafetySquad
         }
         private void OnLevelWin()
         {
-      
+            EndPanelScript.Instance.ShowWin();
         }
         private IEnumerator LoadWinPanelWithDelay(float delay)
         {

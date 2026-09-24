@@ -9,6 +9,8 @@ namespace tmkoc.claw
 {
     public class EndPanelScript : MonoBehaviour
     {
+        public static EndPanelScript Instance { get; private set; }
+
         [Header("References")]
         [SerializeField] private Image winChrachterImage;
         [SerializeField] private Image loseChrachterImage;
@@ -35,6 +37,7 @@ namespace tmkoc.claw
 
         private void Awake()
         {
+            Instance = this;
             winPanel.gameObject.SetActive(false);
             losePanel.gameObject.SetActive(false);
             retryButton.gameObject.SetActive(false);

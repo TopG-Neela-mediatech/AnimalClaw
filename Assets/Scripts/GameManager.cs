@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace TMKOC.SafetySquad
+namespace tmkoc.claw
 {
     public class GameManager : MonoBehaviour
     {

@@ -1,4 +1,4 @@
-namespace TMKOC.SafetySquad
+namespace tmkoc.claw
 {
     public enum Objects
     {
