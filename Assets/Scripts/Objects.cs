@@ -2,6 +2,7 @@ namespace tmkoc.claw
 {
     public enum Objects
     {
+        None,
         Cow,
         Pig,
         Sheep,

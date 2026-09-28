@@ -34,6 +34,7 @@ namespace tmkoc.claw
 
         private RectTransform activePanel;
         private Button activeButton;
+        private Action onActionButtonClicked;
 
         private void Awake()
         {
@@ -61,19 +62,15 @@ namespace tmkoc.claw
         // Public API
         public void ShowWin()
         {
-            Show(winPanel, nextButton); 
-          //  Sprite winSprite = GameManager.Instance.LevelManager.CurrentLevelData.winPanelSprite;
-            //winChrachterImage.sprite = winSprite;
-          //  nextButton.onClick.AddListener(()=>GameManager.Instance.LevelManager.LoadNextLevel());
-            RotateRaysLoop(winRaysT, 8f, true);          
+            Show(winPanel, nextButton);
+            onActionButtonClicked = () => GameManager.Instance.LevelManager.LoadNextLevel();
+            RotateRaysLoop(winRaysT, 8f, true);
         }
 
         public void ShowLose()
         {
             Show(losePanel, retryButton);
-          //  Sprite loseSprite = GameManager.Instance.LevelManager.CurrentLevelData.losePanelSprite;
-           // loseChrachterImage.sprite = loseSprite;
-           // retryButton.onClick.AddListener(() => GameManager.Instance.LevelManager.StartLevel());
+            onActionButtonClicked = () => GameManager.Instance.LevelManager.RetryLevel();
             RotateRaysLoop(loseRaysT, 8f, false);
         }
 
@@ -108,6 +105,8 @@ namespace tmkoc.claw
         private void OnButtonClicked()
         {
             activeButton.gameObject.SetActive(false);
+
+            onActionButtonClicked?.Invoke();
 
             activePanel.DOKill();
             activePanel.DOAnchorPos(OffScreenPos(activePanel), slideOutDuration)

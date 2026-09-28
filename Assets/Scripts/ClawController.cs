@@ -30,6 +30,7 @@ namespace tmkoc.claw
 
         private void Start()
         {
+            stopButton.interactable = true;
             SpawnObjectControllers();
             AnimateClawIntoMachine();
         }
@@ -41,12 +42,11 @@ namespace tmkoc.claw
             LevelManager levelManager = GameManager.Instance.LevelManager;
             LevelData levelData = levelManager.CurrentLevelData;
 
-            foreach (ObjectController option in levelData.Options)
+            foreach (Objects optionType in levelData.Options)
             {
                 ObjectController instance = Instantiate(levelManager.ObjectControllerPrefab, objectParent);
-                SpriteDataSO spriteData = levelData.SpriteDataList.FirstOrDefault(data => data.ObjectType == option.ObjectType);
-                Sprite sprite = spriteData != null && spriteData.Sprites.Length > 0 ? spriteData.Sprites[0] : null;
-                instance.Initialize(option.ObjectType, sprite);
+                ObjectSpriteData spriteData = levelData.SpriteData.ObjectSprites.FirstOrDefault(data => data.ObjectType == optionType);
+                instance.Initialize(optionType, spriteData?.Sprite);
                 objectControllers.Add(instance);
             }
         }
@@ -95,6 +95,7 @@ namespace tmkoc.claw
 
         private void OnStopButtonClicked()
         {
+            stopButton.interactable = false;
             markerSequence?.Kill();
 
             bool isCorrect = currentTargetObject != null && currentTargetObject.ObjectType == GameManager.Instance.LevelManager.CorrectObject;
@@ -106,8 +107,14 @@ namespace tmkoc.claw
             }
             else
             {
-                livesController.OnIncorrectAttempt();
+                livesController.OnIncorrectAttempt(ResumeMarkerCycle);
             }
+        }
+
+        private void ResumeMarkerCycle()
+        {
+            stopButton.interactable = true;
+            StartMarkerCycle();
         }
 
         private void OnDestroy()

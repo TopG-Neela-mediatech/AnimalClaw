@@ -1,3 +1,4 @@
+using System;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -21,18 +22,24 @@ namespace tmkoc.claw
             UpdateLivesText();
         }
 
-        public void OnIncorrectAttempt()
+        public void OnIncorrectAttempt(Action onResume)
         {
-            livesParent.DOKill();
-            livesParent.DOShakeAnchorPos(shakeDuration, shakeStrength, shakeVibrato);
-
             currentLives--;
             UpdateLivesText();
 
-            if (currentLives <= 0)
-            {
-                EndPanelScript.Instance.ShowLose();
-            }
+            livesParent.DOKill();
+            livesParent.DOShakeAnchorPos(shakeDuration, shakeStrength, shakeVibrato)
+                .OnComplete(() =>
+                {
+                    if (currentLives <= 0)
+                    {
+                        EndPanelScript.Instance.ShowLose();
+                    }
+                    else
+                    {
+                        onResume?.Invoke();
+                    }
+                });
         }
 
         private void UpdateLivesText()

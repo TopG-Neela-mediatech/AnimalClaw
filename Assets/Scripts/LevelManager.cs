@@ -8,9 +8,9 @@ namespace tmkoc.claw
     public class LevelManager : MonoBehaviour
     {
         [SerializeField] private Button playSchoolBackButton;
-        [SerializeField] private GameObject[] levels;
-        [SerializeField] private LevelData currentLevelData;
+        [SerializeField] private LevelData[] levels;
         [SerializeField] private ObjectController objectControllerPrefab;
+        private LevelData currentLevelData;
         public int currentLevelIndex { get; private set; }
         public Objects CorrectObject => currentLevelData.CorrectObject;
         public LevelData CurrentLevelData => currentLevelData;
@@ -47,6 +47,7 @@ namespace tmkoc.claw
         {
             HelperGameCategoryDataSaver.Init(levels.Length);
             currentLevelIndex = HelperGameCategoryDataSaver.GetStartLevel();
+            currentLevelData = levels[currentLevelIndex];
         }
         private void SaveLevel()
         {
@@ -66,10 +67,16 @@ namespace tmkoc.claw
         }
         public void LoadNextLevel()
         {
-            if (currentLevelIndex < levels.Length)
-            {
-                StartLevel();
-            }
+            SaveLevel();
+            ReloadScene();
+        }
+        public void RetryLevel()
+        {
+            ReloadScene();
+        }
+        private void ReloadScene()
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
         private void OnDestroy()
         {

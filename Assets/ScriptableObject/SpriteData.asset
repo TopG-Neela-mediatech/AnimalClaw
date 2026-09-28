@@ -12,5 +12,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed8082e4265da1b43b244a16baeebd95, type: 3}
   m_Name: SpriteData
   m_EditorClassIdentifier: 
-  objectType: 0
-  sprites: []
+  objectSprites:
+  - objectType: 1
+    sprite: {fileID: 21300000, guid: b7b4c14823092fd48b2c66728aa1c0d7, type: 3}
+  - objectType: 2
+    sprite: {fileID: 21300000, guid: c29b89242f9e81f4ab525a6641390c3c, type: 3}
+  - objectType: 3
+    sprite: {fileID: 21300000, guid: edce89842863a85439345006b861b3bb, type: 3}
+  - objectType: 4
+    sprite: {fileID: 0}
+  - objectType: 5
+    sprite: {fileID: 0}
+  - objectType: 6
+    sprite: {fileID: 0}
+  - objectType: 7
+    sprite: {fileID: 0}
+  - objectType: 8
+    sprite: {fileID: 0}
+  - objectType: 9
+    sprite: {fileID: 0}
+  - objectType: 10
+    sprite: {fileID: 0}
+  - objectType: 11
+    sprite: {fileID: 0}
+  - objectType: 12
+    sprite: {fileID: 0}
+  - objectType: 13
+    sprite: {fileID: 0}
+  - objectType: 14
+    sprite: {fileID: 0}
+  - objectType: 15
+    sprite: {fileID: 0}
+  - objectType: 16
+    sprite: {fileID: 0}
+  - objectType: 17
+    sprite: {fileID: 0}
+  - objectType: 18
+    sprite: {fileID: 0}
