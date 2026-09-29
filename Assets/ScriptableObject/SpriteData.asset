@@ -13,39 +13,29 @@ MonoBehaviour:
   m_Name: SpriteData
   m_EditorClassIdentifier: 
   objectSprites:
-  - objectType: 1
-    sprite: {fileID: 21300000, guid: b7b4c14823092fd48b2c66728aa1c0d7, type: 3}
-  - objectType: 2
-    sprite: {fileID: 21300000, guid: c29b89242f9e81f4ab525a6641390c3c, type: 3}
-  - objectType: 3
-    sprite: {fileID: 21300000, guid: edce89842863a85439345006b861b3bb, type: 3}
-  - objectType: 4
-    sprite: {fileID: 0}
-  - objectType: 5
-    sprite: {fileID: 0}
   - objectType: 6
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 1fc20d18ccc29c441b6b6bdf4abc0c04, type: 3}
   - objectType: 7
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 05699f61a3b45c940b97009acf89c381, type: 3}
   - objectType: 8
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: c90587db81662124cb92081be966dd56, type: 3}
   - objectType: 9
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 4bfea2bc6c093ea4aa96d6f924256817, type: 3}
   - objectType: 10
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 0c0c4eebaa8f34e43ad0a76cf0d977d5, type: 3}
   - objectType: 11
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 172548a51dddf3545bb0b2878458e412, type: 3}
   - objectType: 12
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: bd273b104e5d86045afac2c96f5915d9, type: 3}
   - objectType: 13
-    sprite: {fileID: 0}
-  - objectType: 14
-    sprite: {fileID: 0}
-  - objectType: 15
-    sprite: {fileID: 0}
-  - objectType: 16
-    sprite: {fileID: 0}
-  - objectType: 17
-    sprite: {fileID: 0}
-  - objectType: 18
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 8e3dd2ea30d05674bb9ff32c50a5a791, type: 3}
+  - objectType: 1
+    sprite: {fileID: 21300000, guid: 5aeda895672317749b20aee926ff3624, type: 3}
+  - objectType: 2
+    sprite: {fileID: 21300000, guid: 4b207119684bc9c40a6cc86427927ca0, type: 3}
+  - objectType: 3
+    sprite: {fileID: 21300000, guid: f4f662873c1ce5c488a90b25e4a7dd36, type: 3}
+  - objectType: 4
+    sprite: {fileID: 21300000, guid: eaad0025720edbc4b9b436762325e4dc, type: 3}
+  - objectType: 5
+    sprite: {fileID: 21300000, guid: e10deb6bcf06cbd44a139892192d936b, type: 3}
