@@ -40,7 +40,7 @@ namespace tmkoc.claw
         [Header("Win Animation")]
         [SerializeField] private RectTransform winningParent;
         [SerializeField] private Image shineImage;
-        [SerializeField] private LayoutGroup objectLayoutGroup;
+        [SerializeField] private GridLayoutGroup objectLayoutGroup;
         [SerializeField] private float winScale = 1.3f;
         [SerializeField] private float winScaleDuration = 0.6f;
         [SerializeField] private float winSpinDuration = 0.8f;
@@ -52,7 +52,8 @@ namespace tmkoc.claw
         private readonly List<RectTransform> activeLinks = new List<RectTransform>();
 
         private Tween horizontalTween;
-        private ObjectController currentTargetObject;
+        private float moveDirection = -1f;
+        private float lastClawX;
         private float topAnchorWorldY;
         private float restWorldY;
         private Vector3 centerWorldPosition;
@@ -66,11 +67,12 @@ namespace tmkoc.claw
 
         private void Start()
         {
-            stopButton.interactable = true;
+            stopButton.interactable = false;
             leftHandStartEuler = clawLeftHand.localEulerAngles;
             rightHandStartEuler = clawRightHand.localEulerAngles;
 
             SpawnObjectControllers();
+            ApplyCellSize();
             // ObjectParent uses a layout group; positions are only valid after a rebuild.
             LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)objectParent);
             // Freeze positions so reparenting a toy doesn't make the others shift.
@@ -83,6 +85,21 @@ namespace tmkoc.claw
             activeLinks.Clear();
             UpdateChainLinks();
 
+            // Wait for the level to start (it is delayed while the story plays); handles either Start order.
+            if (GameManager.Instance.LevelManager.HasLevelStarted)
+            {
+                BeginGameplay();
+            }
+            else
+            {
+                GameManager.Instance.OnLevelStart += BeginGameplay;
+            }
+        }
+
+        private void BeginGameplay()
+        {
+            GameManager.Instance.OnLevelStart -= BeginGameplay;
+            stopButton.interactable = true;
             StartHorizontalCycle();
         }
 
@@ -102,6 +119,13 @@ namespace tmkoc.claw
             }
         }
 
+        private void ApplyCellSize()
+        {
+            int count = objectControllers.Count;
+            float size = count <= 3 ? 150f : count == 4 ? 115f : 90f;
+            objectLayoutGroup.cellSize = new Vector2(size, size);
+        }
+
         private void StartHorizontalCycle()
         {
             if (objectControllers.Count == 0)
@@ -111,7 +135,7 @@ namespace tmkoc.claw
                 return;
             }
 
-            currentTargetObject = objectControllers[0];
+            lastClawX = clawStick.position.x;
 
             float leftX = objectControllers.Min(c => c.transform.position.x);
             float rightX = objectControllers.Max(c => c.transform.position.x);
@@ -121,13 +145,13 @@ namespace tmkoc.claw
             // Travel to the left end once, then ping-pong between the ends forever (no restart from center).
             horizontalTween = clawStick.DOMove(leftPos, MoveDuration(clawStick.position.x, leftX))
                 .SetEase(Ease.Linear)
-                .OnUpdate(UpdateCurrentTargetObject)
+                .OnUpdate(UpdateMoveDirection)
                 .OnComplete(() =>
                 {
                     horizontalTween = clawStick.DOMove(rightPos, MoveDuration(leftX, rightX))
                         .SetEase(Ease.Linear)
                         .SetLoops(-1, LoopType.Yoyo)
-                        .OnUpdate(UpdateCurrentTargetObject);
+                        .OnUpdate(UpdateMoveDirection);
                 });
         }
 
@@ -137,20 +161,35 @@ namespace tmkoc.claw
             return Mathf.Max(0.01f, Mathf.Abs(toX - fromX) / worldSpeed);
         }
 
-        private void UpdateCurrentTargetObject()
+        private void UpdateMoveDirection()
         {
-            ObjectController closest = objectControllers[0];
-            float closestDistance = Mathf.Abs(clawStick.position.x - closest.transform.position.x);
-            for (int i = 1; i < objectControllers.Count; i++)
+            float x = clawStick.position.x;
+            if (!Mathf.Approximately(x, lastClawX))
             {
-                float distance = Mathf.Abs(clawStick.position.x - objectControllers[i].transform.position.x);
-                if (distance < closestDistance)
+                moveDirection = Mathf.Sign(x - lastClawX);
+                lastClawX = x;
+            }
+        }
+
+        // The toy the claw is heading toward: nearest one at/ahead of it in the travel direction.
+        private ObjectController PickTargetAhead()
+        {
+            float clawX = clawStick.position.x;
+            ObjectController best = null;
+            float bestDistance = float.MaxValue;
+            foreach (ObjectController controller in objectControllers)
+            {
+                float offset = (controller.transform.position.x - clawX) * moveDirection;
+                if (offset < 0f) continue;
+                if (offset < bestDistance)
                 {
-                    closestDistance = distance;
-                    closest = objectControllers[i];
+                    bestDistance = offset;
+                    best = controller;
                 }
             }
-            currentTargetObject = closest;
+
+            if (best != null) return best;
+            return objectControllers.OrderBy(c => Mathf.Abs(c.transform.position.x - clawX)).First();
         }
 
         private void OnStopButtonClicked()
@@ -158,16 +197,19 @@ namespace tmkoc.claw
             stopButton.interactable = false;
             horizontalTween?.Kill();
 
-            ObjectController target = currentTargetObject;
-            bool isCorrect = target != null && target.ObjectType == GameManager.Instance.LevelManager.CorrectObject;
+            ObjectController target = PickTargetAhead();
+            bool isCorrect = target.ObjectType == GameManager.Instance.LevelManager.CorrectObject;
             Debug.Log(isCorrect ? "Correct" : "Incorrect");
 
-            clawStick.DOAnchorPosY(clawDropMaxY, grabDropDuration)
-                .SetEase(Ease.InQuad)
-                .OnUpdate(UpdateChainLinks)
+            float targetX = target.transform.position.x;
+            clawStick.DOMoveX(targetX, MoveDuration(clawStick.position.x, targetX))
+                .SetEase(Ease.OutQuad)
                 .OnComplete(() =>
                 {
-                    CloseHands(() => GrabAndRise(target, isCorrect));
+                    clawStick.DOAnchorPosY(clawDropMaxY, grabDropDuration)
+                        .SetEase(Ease.InQuad)
+                        .OnUpdate(UpdateChainLinks)
+                        .OnComplete(() => CloseHands(() => GrabAndRise(target, isCorrect)));
                 });
         }
 
@@ -301,6 +343,7 @@ namespace tmkoc.claw
 
         private void OnDestroy()
         {
+            GameManager.Instance.OnLevelStart -= BeginGameplay;
             horizontalTween?.Kill();
             clawStick.DOKill();
         }

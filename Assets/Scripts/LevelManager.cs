@@ -10,12 +10,21 @@ namespace tmkoc.claw
         [SerializeField] private Button playSchoolBackButton;
         [SerializeField] private LevelData[] levels;
         [SerializeField] private ObjectController objectControllerPrefab;
+        [SerializeField] private StoryController storyController;
         private LevelData currentLevelData;
         public int currentLevelIndex { get; private set; }
         public Objects CorrectObject => currentLevelData.CorrectObject;
         public LevelData CurrentLevelData => currentLevelData;
         public ObjectController ObjectControllerPrefab => objectControllerPrefab;
-        private void StartLevel() => GameManager.Instance.InvokeLevelStart();
+        public bool HasLevelStarted { get; private set; }
+
+        private const string StorySeenKey = "AnimalClawStorySeen";
+
+        private void StartLevel()
+        {
+            HasLevelStarted = true;
+            GameManager.Instance.InvokeLevelStart();
+        }
 
 
         private void Awake()
@@ -28,6 +37,23 @@ namespace tmkoc.claw
         {
             GameManager.Instance.OnLevelStart += OnLevelStart;
             GameManager.Instance.OnLevelWin += OnLevelWin;
+
+            bool isFirstTime = currentLevelIndex == 0 && PlayerPrefs.GetInt(StorySeenKey, 0) == 0;
+            if (isFirstTime)
+            {
+                storyController.OnStoryFinished += OnStoryFinished;
+                storyController.gameObject.SetActive(true);
+            }
+            else
+            {
+                StartLevel();
+            }
+        }
+        private void OnStoryFinished()
+        {
+            storyController.OnStoryFinished -= OnStoryFinished;
+            storyController.gameObject.SetActive(false);
+            PlayerPrefs.SetInt(StorySeenKey, 1);
             StartLevel();
         }
         private void OnLevelStart()
@@ -52,6 +78,8 @@ namespace tmkoc.claw
         private void SaveLevel()
         {
             currentLevelIndex++;
+            // Saved even past the last level; GetStartLevel() wraps a saved index >= level count back to 0.
+            HelperGameCategoryDataSaver.LevelCompleted(currentLevelIndex);
             if (currentLevelIndex >= levels.Length)
             {
 #if PLAYSCHOOL_MAIN
@@ -63,7 +91,6 @@ namespace tmkoc.claw
                 currentLevelIndex = 0;
                 return;
             }
-            HelperGameCategoryDataSaver.LevelCompleted(currentLevelIndex);
         }
         public void LoadNextLevel()
         {
@@ -82,7 +109,7 @@ namespace tmkoc.claw
         {
             GameManager.Instance.OnLevelStart -= OnLevelStart;
             GameManager.Instance.OnLevelWin -= OnLevelWin;
-
+            storyController.OnStoryFinished -= OnStoryFinished;
         }
     }
 }

@@ -8,16 +8,16 @@ namespace tmkoc.claw
     public class StorySlide
     {
         [Header("Visuals")]
-        public Sprite  backgroundSprite;
-        public Sprite  foregroundSprite;
+        public Sprite backgroundSprite;
+        public Sprite foregroundSprite;
         [TextArea(2, 4)]
-        public string  captionText;
+        public string captionText;
 
         [Header("Timing")]
-        public float   displayDuration = 3f;
+        public float displayDuration = 3f;
 
         [Header("Transition")]
-        public SlideTransitionType transitionIn  = SlideTransitionType.FadeIn;
+        public SlideTransitionType transitionIn = SlideTransitionType.FadeIn;
         public SlideTransitionType transitionOut = SlideTransitionType.FadeOut;
 
         [Header("Audio")]
