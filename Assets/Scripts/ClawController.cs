@@ -22,7 +22,8 @@ namespace tmkoc.claw
         [SerializeField] private float linkSpacing = 50f;
 
         [Header("Claw Movement")]
-        [SerializeField] private float horizontalMoveDuration = 0.5f;
+        [SerializeField] private float clawSpeed = 400f;
+        [SerializeField] private float clawDropMaxY = -175f;
         [SerializeField] private float grabDropDuration = 0.6f;
         [SerializeField] private float grabLiftDuration = 0.6f;
 
@@ -31,24 +32,30 @@ namespace tmkoc.claw
         [SerializeField] private float handAnimDuration = 0.25f;
 
         [Header("Incorrect Drop")]
-        [SerializeField] private float dropBounceStrength = 20f;
-        [SerializeField] private float dropBounceDuration = 0.4f;
+        [SerializeField] private float clawShakeDuration = 0.4f;
+        [SerializeField] private float clawShakeStrength = 15f;
+        [SerializeField] private float dropFallDuration = 0.5f;
 
         [Header("Win Animation")]
+        [SerializeField] private RectTransform winningParent;
+        [SerializeField] private Image shineImage;
+        [SerializeField] private LayoutGroup objectLayoutGroup;
         [SerializeField] private float winScale = 1.3f;
         [SerializeField] private float winScaleDuration = 0.6f;
         [SerializeField] private float winSpinDuration = 0.8f;
+        [SerializeField] private float shineSpinDuration = 6f;
+        [SerializeField] private float winPanelDelay = 3f;
 
         private readonly List<ObjectController> objectControllers = new List<ObjectController>();
         private readonly List<RectTransform> activeLinks = new List<RectTransform>();
 
-        private Sequence horizontalSequence;
+        private Tween horizontalTween;
         private ObjectController currentTargetObject;
         private float topAnchorWorldY;
         private float restWorldY;
         private Vector3 centerWorldPosition;
-        private float leftHandStartZ;
-        private float rightHandStartZ;
+        private Vector3 leftHandStartEuler;
+        private Vector3 rightHandStartEuler;
 
         private void Awake()
         {
@@ -58,10 +65,15 @@ namespace tmkoc.claw
         private void Start()
         {
             stopButton.interactable = true;
-            leftHandStartZ = clawLeftHand.localEulerAngles.z;
-            rightHandStartZ = clawRightHand.localEulerAngles.z;
+            leftHandStartEuler = clawLeftHand.localEulerAngles;
+            rightHandStartEuler = clawRightHand.localEulerAngles;
 
             SpawnObjectControllers();
+            // ObjectParent uses a layout group; positions are only valid after a rebuild.
+            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)objectParent);
+            // Freeze positions so reparenting a toy doesn't make the others shift.
+            objectLayoutGroup.enabled = false;
+            shineImage.gameObject.SetActive(false);
 
             centerWorldPosition = clawStick.position;
             restWorldY = centerWorldPosition.y;
@@ -69,7 +81,7 @@ namespace tmkoc.claw
             activeLinks.Clear();
             UpdateChainLinks();
 
-            StartHorizontalCycle(centerWorldPosition);
+            StartHorizontalCycle();
         }
 
         private void SpawnObjectControllers()
@@ -88,7 +100,7 @@ namespace tmkoc.claw
             }
         }
 
-        private void StartHorizontalCycle(Vector3? startFrom = null)
+        private void StartHorizontalCycle()
         {
             if (objectControllers.Count == 0)
             {
@@ -97,18 +109,30 @@ namespace tmkoc.claw
                 return;
             }
 
-            clawStick.position = startFrom ?? clawStick.position;
             currentTargetObject = objectControllers[0];
 
-            horizontalSequence = DOTween.Sequence();
-            foreach (ObjectController controller in objectControllers)
-            {
-                Vector3 targetPos = controller.transform.position;
-                targetPos.y = restWorldY;
-                horizontalSequence.Append(clawStick.DOMove(targetPos, horizontalMoveDuration).SetEase(Ease.Linear));
-            }
-            horizontalSequence.OnUpdate(UpdateCurrentTargetObject);
-            horizontalSequence.SetLoops(-1, LoopType.Yoyo);
+            float leftX = objectControllers.Min(c => c.transform.position.x);
+            float rightX = objectControllers.Max(c => c.transform.position.x);
+            Vector3 leftPos = new Vector3(leftX, restWorldY, clawStick.position.z);
+            Vector3 rightPos = new Vector3(rightX, restWorldY, clawStick.position.z);
+
+            // Travel to the left end once, then ping-pong between the ends forever (no restart from center).
+            horizontalTween = clawStick.DOMove(leftPos, MoveDuration(clawStick.position.x, leftX))
+                .SetEase(Ease.Linear)
+                .OnUpdate(UpdateCurrentTargetObject)
+                .OnComplete(() =>
+                {
+                    horizontalTween = clawStick.DOMove(rightPos, MoveDuration(leftX, rightX))
+                        .SetEase(Ease.Linear)
+                        .SetLoops(-1, LoopType.Yoyo)
+                        .OnUpdate(UpdateCurrentTargetObject);
+                });
+        }
+
+        private float MoveDuration(float fromX, float toX)
+        {
+            float worldSpeed = Mathf.Max(0.01f, clawSpeed) * Mathf.Abs(clawStick.lossyScale.x);
+            return Mathf.Max(0.01f, Mathf.Abs(toX - fromX) / worldSpeed);
         }
 
         private void UpdateCurrentTargetObject()
@@ -130,49 +154,86 @@ namespace tmkoc.claw
         private void OnStopButtonClicked()
         {
             stopButton.interactable = false;
-            horizontalSequence?.Kill();
+            horizontalTween?.Kill();
 
             ObjectController target = currentTargetObject;
             bool isCorrect = target != null && target.ObjectType == GameManager.Instance.LevelManager.CorrectObject;
             Debug.Log(isCorrect ? "Correct" : "Incorrect");
 
-            clawStick.DOMove(target.transform.position, grabDropDuration)
+            clawStick.DOAnchorPosY(clawDropMaxY, grabDropDuration)
                 .SetEase(Ease.InQuad)
                 .OnUpdate(UpdateChainLinks)
                 .OnComplete(() =>
                 {
-                    CloseHands(() =>
-                    {
-                        if (isCorrect)
-                        {
-                            HandleCorrectGrab(target);
-                        }
-                        else
-                        {
-                            HandleIncorrectGrab(target);
-                        }
-                    });
+                    CloseHands(() => GrabAndRise(target, isCorrect));
                 });
         }
 
-        private void HandleCorrectGrab(ObjectController target)
+        private void GrabAndRise(ObjectController target, bool isCorrect)
         {
+            Vector3 originalWorldPosition = target.transform.position;
+            int originalSiblingIndex = target.transform.GetSiblingIndex();
             target.transform.SetParent(clawStick, true);
 
             RiseToRest(() =>
             {
-                PlayWinAnimation(target);
-                GameManager.Instance.InvokeLevelWin();
+                if (isCorrect)
+                {
+                    PlayWinSequence(target);
+                }
+                else
+                {
+                    PlayIncorrectDrop(target, originalWorldPosition, originalSiblingIndex);
+                }
             });
         }
 
-        private void HandleIncorrectGrab(ObjectController target)
+        private void PlayIncorrectDrop(ObjectController target, Vector3 originalWorldPosition, int originalSiblingIndex)
         {
-            OpenHands(() =>
+            clawStick.DOShakeAnchorPos(clawShakeDuration, clawShakeStrength)
+                .OnComplete(() =>
+                {
+                    OpenHands(() =>
+                    {
+                        target.transform.SetParent(objectParent, true);
+                        target.transform.SetSiblingIndex(originalSiblingIndex);
+                        target.transform.DOMove(originalWorldPosition, dropFallDuration)
+                            .SetEase(Ease.OutBounce)
+                            .OnComplete(() => livesController.OnIncorrectAttempt(ResumeHorizontalCycle));
+                    });
+                });
+        }
+
+        private void PlayWinSequence(ObjectController target)
+        {
+            RectTransform targetRect = (RectTransform)target.transform;
+            targetRect.SetParent(winningParent, true);
+
+            // The toy came from a layout group, so its anchors/pivot aren't centered; fix them without moving it.
+            Vector3 worldPosition = targetRect.position;
+            targetRect.anchorMin = targetRect.anchorMax = targetRect.pivot = new Vector2(0.5f, 0.5f);
+            targetRect.position = worldPosition;
+
+            RectTransform shineRect = shineImage.rectTransform;
+            shineRect.SetParent(winningParent, false);
+            shineRect.anchoredPosition = Vector2.zero;
+            shineRect.SetAsFirstSibling();
+            shineImage.gameObject.SetActive(true);
+            shineRect.DORotate(new Vector3(0f, 0f, -360f), shineSpinDuration, RotateMode.FastBeyond360)
+                .SetEase(Ease.Linear)
+                .SetLoops(-1, LoopType.Incremental)
+                .SetLink(shineImage.gameObject);
+
+            targetRect.DOAnchorPos(Vector2.zero, winScaleDuration).SetEase(Ease.OutBack);
+            targetRect.DOScale(winScale, winScaleDuration).SetEase(Ease.OutBack);
+            targetRect.DORotate(new Vector3(0f, 360f, 0f), winSpinDuration, RotateMode.FastBeyond360).SetEase(Ease.Linear);
+
+            DOVirtual.DelayedCall(winPanelDelay, () =>
             {
-                PlayDropBounce(target);
-                RiseToRest(() => livesController.OnIncorrectAttempt(ResumeHorizontalCycle));
-            });
+                shineRect.DOKill();
+                shineImage.gameObject.SetActive(false);
+                GameManager.Instance.InvokeLevelWin();
+            }).SetLink(gameObject);
         }
 
         private void RiseToRest(Action onComplete)
@@ -194,33 +255,20 @@ namespace tmkoc.claw
         private void CloseHands(Action onComplete)
         {
             Sequence sequence = DOTween.Sequence();
-            sequence.Join(clawLeftHand.DOLocalRotate(new Vector3(0f, 0f, leftHandStartZ + handGrabAngle), handAnimDuration));
-            sequence.Join(clawRightHand.DOLocalRotate(new Vector3(0f, 0f, rightHandStartZ + handGrabAngle), handAnimDuration));
+            sequence.Join(clawLeftHand.DOLocalRotate(WithZ(leftHandStartEuler, leftHandStartEuler.z + handGrabAngle), handAnimDuration));
+            sequence.Join(clawRightHand.DOLocalRotate(WithZ(rightHandStartEuler, rightHandStartEuler.z + handGrabAngle), handAnimDuration));
             sequence.OnComplete(() => onComplete?.Invoke());
         }
 
         private void OpenHands(Action onComplete)
         {
             Sequence sequence = DOTween.Sequence();
-            sequence.Join(clawLeftHand.DOLocalRotate(new Vector3(0f, 0f, leftHandStartZ), handAnimDuration));
-            sequence.Join(clawRightHand.DOLocalRotate(new Vector3(0f, 0f, rightHandStartZ), handAnimDuration));
+            sequence.Join(clawLeftHand.DOLocalRotate(leftHandStartEuler, handAnimDuration));
+            sequence.Join(clawRightHand.DOLocalRotate(rightHandStartEuler, handAnimDuration));
             sequence.OnComplete(() => onComplete?.Invoke());
         }
 
-        private void PlayDropBounce(ObjectController target)
-        {
-            RectTransform targetRect = target.transform as RectTransform;
-            if (targetRect == null) return;
-
-            targetRect.DOPunchAnchorPos(new Vector2(0f, -dropBounceStrength), dropBounceDuration, 1, 0.5f);
-        }
-
-        private void PlayWinAnimation(ObjectController target)
-        {
-            Transform targetTransform = target.transform;
-            targetTransform.DOScale(winScale, winScaleDuration).SetEase(Ease.OutBack);
-            targetTransform.DORotate(new Vector3(0f, 360f, 0f), winSpinDuration, RotateMode.FastBeyond360).SetEase(Ease.Linear);
-        }
+        private static Vector3 WithZ(Vector3 euler, float z) => new Vector3(euler.x, euler.y, z);
 
         // Links are children of the claw stick, so they travel with it horizontally for free;
         // only their local Y (distance from the stick) needs updating as the stick moves vertically.
@@ -250,7 +298,7 @@ namespace tmkoc.claw
 
         private void OnDestroy()
         {
-            horizontalSequence?.Kill();
+            horizontalTween?.Kill();
             clawStick.DOKill();
         }
     }
