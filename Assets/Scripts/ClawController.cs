@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AssetKits.ParticleImage;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
@@ -46,6 +47,7 @@ namespace tmkoc.claw
         [SerializeField] private float shineSpinDuration = 6f;
         [SerializeField] private float winPanelDelay = 3f;
 
+        [SerializeField] ParticleImage confettiEffect;
         private readonly List<ObjectController> objectControllers = new List<ObjectController>();
         private readonly List<RectTransform> activeLinks = new List<RectTransform>();
 
@@ -226,6 +228,7 @@ namespace tmkoc.claw
 
             targetRect.DOAnchorPos(Vector2.zero, winScaleDuration).SetEase(Ease.OutBack);
             targetRect.DOScale(winScale, winScaleDuration).SetEase(Ease.OutBack);
+            confettiEffect.Play();
             targetRect.DORotate(new Vector3(0f, 360f, 0f), winSpinDuration, RotateMode.FastBeyond360).SetEase(Ease.Linear);
 
             DOVirtual.DelayedCall(winPanelDelay, () =>
