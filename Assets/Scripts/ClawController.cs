@@ -28,10 +28,10 @@ namespace tmkoc.claw
 
         [Header("Claw Movement")]
         [SerializeField] private float clawSpeed = 400f;
-        [SerializeField] private Vector2 clawHorizontalRange = new Vector2(-400f, 400f);
         [SerializeField] private float clawDropMaxY = -175f;
         [SerializeField] private float grabDropDuration = 0.6f;
         [SerializeField] private float grabLiftDuration = 0.6f;
+        [SerializeField] private RectTransform clawDropTarget;
 
         [Header("Claw Hands")]
         [SerializeField, Range(0f, 15f)] private float handGrabAngle = 15f;
@@ -43,8 +43,6 @@ namespace tmkoc.claw
         [SerializeField] private float dropFallDuration = 0.5f;
 
         [Header("Win Animation")]
-        [SerializeField] private RectTransform clawDropTarget;
-        [SerializeField] private float dropTargetExtraY = 30f;
         [SerializeField] private RectTransform winningParent;
         [SerializeField] private Image shineImage;
         [SerializeField] private GridLayoutGroup objectLayoutGroup;
@@ -127,7 +125,7 @@ namespace tmkoc.claw
         private void ApplyCellSize()
         {
             int count = objectControllers.Count;
-            float size = count <= 3 ? 125f : count == 4 ? 90f : 90f;
+            float size = count <= 3 ? 150f : count == 4 ? 115f : 90f;
             objectLayoutGroup.cellSize = new Vector2(size, size);
         }
 
@@ -142,25 +140,22 @@ namespace tmkoc.claw
 
             lastClawX = clawStick.position.x;
 
-            float leftX = Mathf.Min(clawHorizontalRange.x, clawHorizontalRange.y);
-            float rightX = Mathf.Max(clawHorizontalRange.x, clawHorizontalRange.y);
+            float leftX = objectControllers.Min(c => c.transform.position.x);
+            float rightX = objectControllers.Max(c => c.transform.position.x);
+            Vector3 leftPos = new Vector3(leftX, restWorldY, clawStick.position.z);
+            Vector3 rightPos = new Vector3(rightX, restWorldY, clawStick.position.z);
 
             // Travel to the left end once, then ping-pong between the ends forever (no restart from center).
-            horizontalTween = clawStick.DOAnchorPosX(leftX, LocalMoveDuration(clawStick.anchoredPosition.x, leftX))
+            horizontalTween = clawStick.DOMove(leftPos, MoveDuration(clawStick.position.x, leftX))
                 .SetEase(Ease.Linear)
                 .OnUpdate(UpdateMoveDirection)
                 .OnComplete(() =>
                 {
-                    horizontalTween = clawStick.DOAnchorPosX(rightX, LocalMoveDuration(leftX, rightX))
+                    horizontalTween = clawStick.DOMove(rightPos, MoveDuration(leftX, rightX))
                         .SetEase(Ease.Linear)
                         .SetLoops(-1, LoopType.Yoyo)
                         .OnUpdate(UpdateMoveDirection);
                 });
-        }
-
-        private float LocalMoveDuration(float fromX, float toX)
-        {
-            return Mathf.Max(0.01f, Mathf.Abs(toX - fromX) / Mathf.Max(0.01f, clawSpeed));
         }
 
         private float MoveDuration(float fromX, float toX)
@@ -239,7 +234,7 @@ namespace tmkoc.claw
             {
                 if (isCorrect)
                 {
-                    DropAtTarget(target);
+                    PlayWinSequence(target);
                 }
                 else
                 {
@@ -264,38 +259,15 @@ namespace tmkoc.claw
                 });
         }
 
-        private void DropAtTarget(ObjectController target)
+        private void PlayWinSequence(ObjectController target)
         {
-            float targetX = clawDropTarget.position.x;
-            clawStick.DOMoveX(targetX, MoveDuration(clawStick.position.x, targetX))
-                .SetEase(Ease.OutQuad)
-                .OnComplete(() =>
-                {
-                    OpenHands(() =>
-                    {
-                        // Parent is intentionally unchanged here; it moves to winningParent once the win animation starts.
-                        Vector3 dropPosition = clawDropTarget.position + Vector3.down * (dropTargetExtraY * clawDropTarget.lossyScale.y);
-                        target.transform.DOMove(dropPosition, dropFallDuration)
-                            .SetEase(Ease.InQuad)
-                            .OnComplete(() => PlayWinSequence(target));
-                    });
-                });
-        }
-
-        private void MoveToWinningParent(RectTransform targetRect)
-        {
+            RectTransform targetRect = (RectTransform)target.transform;
             targetRect.SetParent(winningParent, true);
 
             // The toy came from a layout group, so its anchors/pivot aren't centered; fix them without moving it.
             Vector3 worldPosition = targetRect.position;
             targetRect.anchorMin = targetRect.anchorMax = targetRect.pivot = new Vector2(0.5f, 0.5f);
             targetRect.position = worldPosition;
-        }
-
-        private void PlayWinSequence(ObjectController target)
-        {
-            RectTransform targetRect = (RectTransform)target.transform;
-            MoveToWinningParent(targetRect);
 
             RectTransform shineRect = shineImage.rectTransform;
             shineRect.SetParent(winningParent, false);
