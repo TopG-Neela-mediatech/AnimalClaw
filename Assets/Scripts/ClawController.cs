@@ -21,6 +21,11 @@ namespace tmkoc.claw
         [Header("Chain Link")]
         [SerializeField, Range(0f, 1f)] private float maxFillAmount = 0.8f;
 
+        [Header("Stop Button Press")]
+        [SerializeField] private float buttonRestScaleY = 1.5f;
+        [SerializeField] private float buttonPressedScaleY = 0.8f;
+        [SerializeField] private float buttonPressDuration = 0.1f;
+
         [Header("Claw Movement")]
         [SerializeField] private float clawSpeed = 400f;
         [SerializeField] private float clawDropMaxY = -175f;
@@ -168,6 +173,13 @@ namespace tmkoc.claw
             }
         }
 
+        private void PlayButtonPress()
+        {
+            Transform buttonTransform = stopButton.transform;
+            buttonTransform.DOKill();
+            buttonTransform.DOScaleY(buttonPressedScaleY, buttonPressDuration).SetLink(stopButton.gameObject);
+        }
+
         // The toy the claw is heading toward: nearest one at/ahead of it in the travel direction.
         private ObjectController PickTargetAhead()
         {
@@ -193,6 +205,7 @@ namespace tmkoc.claw
         {
             stopButton.interactable = false;
             horizontalTween?.Kill();
+            PlayButtonPress();
 
             ObjectController target = PickTargetAhead();
             bool isCorrect = target.ObjectType == GameManager.Instance.LevelManager.CorrectObject;
@@ -290,7 +303,11 @@ namespace tmkoc.claw
 
         private void ResumeHorizontalCycle()
         {
-            stopButton.interactable = true;
+            Transform buttonTransform = stopButton.transform;
+            buttonTransform.DOKill();
+            buttonTransform.DOScaleY(buttonRestScaleY, buttonPressDuration)
+                .SetLink(stopButton.gameObject)
+                .OnComplete(() => stopButton.interactable = true);
             StartHorizontalCycle();
         }
 

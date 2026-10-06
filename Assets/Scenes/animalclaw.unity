@@ -1901,7 +1901,7 @@ RectTransform:
   m_GameObject: {fileID: 1411279956}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 1.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 635363539}
@@ -1930,7 +1930,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
@@ -2518,7 +2518,10 @@ MonoBehaviour:
   objectParent: {fileID: 1662354264}
   stopButton: {fileID: 1411279958}
   livesController: {fileID: 823645539}
-  fillPerUnit: 0.01
+  maxFillAmount: 0.8
+  buttonRestScaleY: 1.5
+  buttonPressedScaleY: 0.8
+  buttonPressDuration: 0.1
   clawSpeed: 250
   clawDropMaxY: -275
   grabDropDuration: 0.75
