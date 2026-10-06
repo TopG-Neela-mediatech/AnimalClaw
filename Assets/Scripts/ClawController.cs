@@ -44,6 +44,7 @@ namespace tmkoc.claw
 
         [Header("Win Animation")]
         [SerializeField] private RectTransform clawDropTarget;
+        [SerializeField] private float dropTargetExtraY = 30f;
         [SerializeField] private RectTransform winningParent;
         [SerializeField] private Image shineImage;
         [SerializeField] private GridLayoutGroup objectLayoutGroup;
@@ -272,9 +273,9 @@ namespace tmkoc.claw
                 {
                     OpenHands(() =>
                     {
-                        RectTransform targetRect = (RectTransform)target.transform;
-                        MoveToWinningParent(targetRect);
-                        targetRect.DOMove(clawDropTarget.position, dropFallDuration)
+                        // Parent is intentionally unchanged here; it moves to winningParent once the win animation starts.
+                        Vector3 dropPosition = clawDropTarget.position + Vector3.down * (dropTargetExtraY * clawDropTarget.lossyScale.y);
+                        target.transform.DOMove(dropPosition, dropFallDuration)
                             .SetEase(Ease.InQuad)
                             .OnComplete(() => PlayWinSequence(target));
                     });
@@ -294,6 +295,7 @@ namespace tmkoc.claw
         private void PlayWinSequence(ObjectController target)
         {
             RectTransform targetRect = (RectTransform)target.transform;
+            MoveToWinningParent(targetRect);
 
             RectTransform shineRect = shineImage.rectTransform;
             shineRect.SetParent(winningParent, false);
