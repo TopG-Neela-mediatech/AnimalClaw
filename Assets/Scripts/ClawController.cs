@@ -19,8 +19,7 @@ namespace tmkoc.claw
         [SerializeField] private LivesController livesController;
 
         [Header("Chain Link")]
-        [SerializeField] private RectTransform linkPrefab;
-        [SerializeField] private float linkSpacing = 50f;
+        [SerializeField, Range(0f, 1f)] private float maxFillAmount = 0.8f;
 
         [Header("Claw Movement")]
         [SerializeField] private float clawSpeed = 400f;
@@ -31,7 +30,7 @@ namespace tmkoc.claw
         [Header("Claw Hands")]
         [SerializeField, Range(0f, 15f)] private float handGrabAngle = 15f;
         [SerializeField] private float handAnimDuration = 0.25f;
-
+        [SerializeField] private Image linkFillImage;
         [Header("Incorrect Drop")]
         [SerializeField] private float clawShakeDuration = 0.4f;
         [SerializeField] private float clawShakeStrength = 15f;
@@ -49,12 +48,11 @@ namespace tmkoc.claw
 
         [SerializeField] ParticleImage confettiEffect;
         private readonly List<ObjectController> objectControllers = new List<ObjectController>();
-        private readonly List<RectTransform> activeLinks = new List<RectTransform>();
 
         private Tween horizontalTween;
         private float moveDirection = -1f;
         private float lastClawX;
-        private float topAnchorWorldY;
+        private float restAnchoredY;
         private float restWorldY;
         private Vector3 centerWorldPosition;
         private Vector3 leftHandStartEuler;
@@ -81,9 +79,8 @@ namespace tmkoc.claw
 
             centerWorldPosition = clawStick.position;
             restWorldY = centerWorldPosition.y;
-            topAnchorWorldY = restWorldY;
-            activeLinks.Clear();
-            UpdateChainLinks();
+            restAnchoredY = clawStick.anchoredPosition.y;
+            linkFillImage.fillAmount = 0f;
 
             // Wait for the level to start (it is delayed while the story plays); handles either Start order.
             if (GameManager.Instance.LevelManager.HasLevelStarted)
@@ -286,7 +283,7 @@ namespace tmkoc.claw
             Vector3 restPosition = clawStick.position;
             restPosition.y = restWorldY;
             clawStick.DOMove(restPosition, grabLiftDuration)
-                .SetEase(Ease.InOutQuad)
+                .SetEase(Ease.OutQuad)
                 .OnUpdate(UpdateChainLinks)
                 .OnComplete(() => onComplete?.Invoke());
         }
@@ -315,30 +312,12 @@ namespace tmkoc.claw
 
         private static Vector3 WithZ(Vector3 euler, float z) => new Vector3(euler.x, euler.y, z);
 
-        // Links are children of the claw stick, so they travel with it horizontally for free;
-        // only their local Y (distance from the stick) needs updating as the stick moves vertically.
+        // The chain fills in proportion to how far the stick has dropped below its rest height.
         private void UpdateChainLinks()
         {
-            float distance = Mathf.Max(0f, topAnchorWorldY - clawStick.position.y);
-            int required = Mathf.FloorToInt(distance / linkSpacing);
-
-            while (activeLinks.Count < required)
-            {
-                RectTransform link = Instantiate(linkPrefab, clawStick);
-                link.SetAsFirstSibling();
-                activeLinks.Add(link);
-            }
-            while (activeLinks.Count > required)
-            {
-                RectTransform link = activeLinks[activeLinks.Count - 1];
-                activeLinks.RemoveAt(activeLinks.Count - 1);
-                Destroy(link.gameObject);
-            }
-
-            for (int i = 0; i < activeLinks.Count; i++)
-            {
-                activeLinks[i].anchoredPosition = new Vector2(0f, (i + 1) * linkSpacing);
-            }
+            float dropDistance = Mathf.Max(0f, restAnchoredY - clawStick.anchoredPosition.y);
+            float totalDrop = Mathf.Max(0.01f, restAnchoredY - clawDropMaxY);
+            linkFillImage.fillAmount = maxFillAmount * Mathf.Clamp01(dropDistance / totalDrop);
         }
 
         private void OnDestroy()
