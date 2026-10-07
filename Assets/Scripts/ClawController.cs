@@ -51,6 +51,10 @@ namespace tmkoc.claw
         [SerializeField] private RectTransform winningParent2;
         [SerializeField] private Image shineImage;
         [SerializeField] private GridLayoutGroup objectLayoutGroup;
+        [SerializeField] private Vector2 cellSizeFor3Objects = new Vector2(125f, 125f);
+        [SerializeField] private Vector2 cellSizeFor4Objects = new Vector2(90f, 90f);
+        [SerializeField] private Vector2 spacingFor3Objects = new Vector2(50f, 0f);
+        [SerializeField] private Vector2 spacingFor4Objects = new Vector2(15f, 0f);
         [SerializeField] private float winSlotDelay = 0.5f;
         [SerializeField] private float winMoveDuration = 1f;
         [SerializeField] private float winScale = 1.3f;
@@ -154,9 +158,9 @@ namespace tmkoc.claw
 
         private void ApplyCellSize()
         {
-            int count = objectControllers.Count;
-            float size = count <= 3 ? 125f : count == 4 ? 90f : 90f;
-            objectLayoutGroup.cellSize = new Vector2(size, size);
+            bool isSmallLevel = objectControllers.Count <= 3;
+            objectLayoutGroup.cellSize = isSmallLevel ? cellSizeFor3Objects : cellSizeFor4Objects;
+            objectLayoutGroup.spacing = isSmallLevel ? spacingFor3Objects : spacingFor4Objects;
         }
 
         private void StartHorizontalCycle()
