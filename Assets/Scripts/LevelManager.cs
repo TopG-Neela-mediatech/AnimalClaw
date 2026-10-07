@@ -58,11 +58,15 @@ namespace tmkoc.claw
         }
         private void OnLevelStart()
         {
-         
+            GameManager.Instance.SoundManager.PlayLevelStartSequence();
         }
         private void OnLevelWin()
         {
             EndPanelScript.Instance.ShowWin();
+            if (currentLevelIndex == levels.Length - 1)
+            {
+                GameManager.Instance.SoundManager.PlayFinalOutro();
+            }
         }
         private IEnumerator LoadWinPanelWithDelay(float delay)
         {

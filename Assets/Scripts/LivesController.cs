@@ -33,6 +33,7 @@ namespace tmkoc.claw
                 {
                     if (currentLives <= 0)
                     {
+                        GameManager.Instance.SoundManager.StopAllExceptBGM();
                         EndPanelScript.Instance.ShowLose();
                     }
                     else

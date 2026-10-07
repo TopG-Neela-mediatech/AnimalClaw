@@ -318,6 +318,10 @@ namespace tmkoc.claw
 
         private void PlayWinSequence(ObjectController target)
         {
+            SoundManager soundManager = GameManager.Instance.SoundManager;
+            soundManager.StopAllExceptBGM();
+            soundManager.PlayAnimalOutro(target.ObjectType);
+
             RectTransform targetRect = (RectTransform)target.transform;
             targetRect.SetParent(winningParent, false);
 

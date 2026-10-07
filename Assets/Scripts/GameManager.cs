@@ -5,12 +5,14 @@ namespace tmkoc.claw
 {
     public class GameManager : MonoBehaviour
     {
-        [SerializeField] private LevelManager levelManager;     
+        [SerializeField] private LevelManager levelManager;
+        [SerializeField] private SoundManager soundManager;
         private static GameManager instance;
 
 
         public static GameManager Instance { get { return instance; } }
         public LevelManager LevelManager { get { return levelManager; } }
+        public SoundManager SoundManager { get { return soundManager; } }
      
       
         private void Awake()

@@ -58,10 +58,11 @@ namespace tmkoc.claw
                 var slide = storyData.slides[_slideIndex];
                 storyUI?.ShowSlide(slide);
                 storyAnimator?.AnimateSlideIn(slide.transitionIn);
-                /*  float dur = GameManager.Instance.SoundManager.PlayIntroSlide(_slideIndex);
-                  if (dur < 2)
-                  {*/
-                float dur = 3;
+                float dur = GameManager.Instance.SoundManager.PlayIntroSlide(_slideIndex);
+                if (dur < 2)
+                {
+                    dur = 3;
+                }
 
                 yield return new WaitForSeconds(dur + 0.5f);
                 if (_isSkipped) break;

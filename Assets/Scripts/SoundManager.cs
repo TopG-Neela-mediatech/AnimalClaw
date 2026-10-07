@@ -1,0 +1,128 @@
+using System.Collections;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace tmkoc.claw
+{
+    public class SoundManager : MonoBehaviour
+    {
+        [SerializeField] private AudioMapper audioMapper;
+        [SerializeField] private AudioSource bgmSource;
+        [SerializeField] private AudioSource sfxSource;
+        [SerializeField] private AudioSource correctSFX;
+        [SerializeField] private AudioSource animalSource;
+        [SerializeField] private AnimalSound[] animalSounds;
+        [SerializeField] private Button animalSoundButton;
+
+        private Coroutine levelStartRoutine;
+
+        private void Awake()
+        {
+            animalSoundButton.onClick.AddListener(OnAnimalSoundButtonClicked);
+        }
+
+        public void PlayBGM()
+        {
+            if (bgmSource.isPlaying) { return; }
+            bgmSource.Play();
+        }
+        public void StopBGM() => bgmSource.Stop();
+        public void StopAllExceptBGM()
+        {
+            StopLevelStartSequence();
+            animalSource.Stop();
+            if (sfxSource != null) sfxSource.Stop();
+            if (correctSFX != null) correctSFX.Stop();
+        }
+        public void PlaySfx() => sfxSource.Play();
+        public void PlayCorrectSFX() => correctSFX.Play();
+
+        public float PlayIntroSlide(int slideIndex)
+        {
+            return RuntimeAudioLoader.Instance.PlayRuntimeAudio(audioMapper.introSlides[slideIndex]);
+        }
+        public float PlayLevelIntro()
+        {
+            int rand = Random.Range(0, audioMapper.levelIntros.Length);
+            return RuntimeAudioLoader.Instance.PlayRuntimeAudio(audioMapper.levelIntros[rand]);
+        }
+        public float PlayLevelPrompt()
+        {
+            int rand = Random.Range(0, audioMapper.levelPrompts.Length);
+            return RuntimeAudioLoader.Instance.PlayRuntimeAudio(audioMapper.levelPrompts[rand]);
+        }
+        // "Yay! You found the <animal>!" — key is outro_<animal name in lowercase>.
+        public float PlayAnimalOutro(Objects animal)
+        {
+            return RuntimeAudioLoader.Instance.PlayRuntimeAudio("outro_" + animal.ToString().ToLower());
+        }
+        public void PlayFinalOutro()
+        {
+            RuntimeAudioLoader.Instance.PlayRuntimeAudio(audioMapper.outro);
+        }
+
+        // Level start: "Let's hear the sound" -> animal sound -> "Can you find it and press the button?"
+        public void PlayLevelStartSequence()
+        {
+            StopLevelStartSequence();
+            levelStartRoutine = StartCoroutine(LevelStartRoutine());
+        }
+
+        private IEnumerator LevelStartRoutine()
+        {
+            yield return new WaitForSeconds(Mathf.Max(0f, PlayLevelIntro()));
+            yield return new WaitForSeconds(Mathf.Max(0f, PlayAnimalSound()));
+            PlayLevelPrompt();
+            levelStartRoutine = null;
+        }
+
+        private void StopLevelStartSequence()
+        {
+            if (levelStartRoutine != null)
+            {
+                StopCoroutine(levelStartRoutine);
+                levelStartRoutine = null;
+            }
+        }
+
+        // Plays the current level's correct animal on its own source; returns the clip length (or -1).
+        public float PlayAnimalSound()
+        {
+            Objects correct = GameManager.Instance.LevelManager.CorrectObject;
+            foreach (AnimalSound animalSound in animalSounds)
+            {
+                if (animalSound.objectType != correct) continue;
+                animalSource.clip = animalSound.clip;
+                animalSource.Play();
+                return animalSound.clip.length;
+            }
+            Debug.LogWarning("SoundManager: no animal sound assigned for " + correct);
+            return -1f;
+        }
+
+        public void StopAnimalSound() => animalSource.Stop();
+
+        // Replay button: only plays the animal sound, and is ignored while it is already playing.
+        private void OnAnimalSoundButtonClicked()
+        {
+            if (animalSource.isPlaying) return;
+            PlayAnimalSound();
+        }
+    }
+
+    [System.Serializable]
+    public class AnimalSound
+    {
+        public Objects objectType;
+        public AudioClip clip;
+    }
+
+    [System.Serializable]
+    public class AudioMapper
+    {
+        public string[] introSlides = { "slide1", "slide2", "slide3" };
+        public string[] levelIntros = { "levelintro1", "levelintro2", "levelintro3" };
+        public string[] levelPrompts = { "levelprompt1", "levelprompt2", "levelprompt3" };
+        public string outro = "finaloutro";
+    }
+}
