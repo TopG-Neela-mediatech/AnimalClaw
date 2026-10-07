@@ -2584,7 +2584,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   handImage: {fileID: 500207345}
   stopButton: {fileID: 1411279957}
-  handOffset: {x: 0, y: 0}
+  handOffset: {x: 50, y: 75}
   tapScale: 0.8
   tapMove: {x: 0, y: -15}
   tapDuration: 0.25
