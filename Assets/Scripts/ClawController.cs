@@ -17,6 +17,7 @@ namespace tmkoc.claw
         [SerializeField] private Transform objectParent;
         [SerializeField] private Button stopButton;
         [SerializeField] private LivesController livesController;
+        [SerializeField] private HandTutorialManager handTutorialManager;
 
         [Header("Chain Link")]
         [SerializeField, Range(0f, 1f)] private float maxFillAmount = 0.8f;
@@ -46,8 +47,12 @@ namespace tmkoc.claw
 
         [Header("Win Animation")]
         [SerializeField] private RectTransform winningParent;
+        [SerializeField] private RectTransform winningParent1;
+        [SerializeField] private RectTransform winningParent2;
         [SerializeField] private Image shineImage;
         [SerializeField] private GridLayoutGroup objectLayoutGroup;
+        [SerializeField] private float winSlotDelay = 0.5f;
+        [SerializeField] private float winMoveDuration = 1f;
         [SerializeField] private float winScale = 1.3f;
         [SerializeField] private float winScaleDuration = 0.6f;
         [SerializeField] private float winSpinDuration = 0.8f;
@@ -58,6 +63,7 @@ namespace tmkoc.claw
         private readonly List<ObjectController> objectControllers = new List<ObjectController>();
 
         private Tween horizontalTween;
+        private ObjectController tutorialTarget;
         private float moveDirection = -1f;
         private float lastClawX;
         private float restAnchoredY;
@@ -104,8 +110,30 @@ namespace tmkoc.claw
         private void BeginGameplay()
         {
             GameManager.Instance.OnLevelStart -= BeginGameplay;
+
+            if (handTutorialManager.IsTutorialLevel)
+            {
+                AlignOverCorrectObject();
+                return;
+            }
+
             stopButton.interactable = true;
             StartHorizontalCycle();
+            handTutorialManager.StartIdleWatch();
+        }
+
+        // First level: park the claw above the correct toy and prompt the user to tap.
+        private void AlignOverCorrectObject()
+        {
+            tutorialTarget = objectControllers.First(c => c.ObjectType == GameManager.Instance.LevelManager.CorrectObject);
+            float targetX = tutorialTarget.transform.position.x;
+            clawStick.DOMoveX(targetX, MoveDuration(clawStick.position.x, targetX))
+                .SetEase(Ease.OutQuad)
+                .OnComplete(() =>
+                {
+                    stopButton.interactable = true;
+                    handTutorialManager.ShowTutorialHint();
+                });
         }
 
         private void SpawnObjectControllers()
@@ -212,8 +240,10 @@ namespace tmkoc.claw
             stopButton.interactable = false;
             horizontalTween?.Kill();
             PlayButtonPress();
+            handTutorialManager.StopHint();
 
-            ObjectController target = PickTargetAhead();
+            ObjectController target = tutorialTarget != null ? tutorialTarget : PickTargetAhead();
+            tutorialTarget = null;
             bool isCorrect = target.ObjectType == GameManager.Instance.LevelManager.CorrectObject;
             Debug.Log(isCorrect ? "Correct" : "Incorrect");
 
@@ -277,7 +307,7 @@ namespace tmkoc.claw
                         Vector3 dropPosition = clawDropTarget.position + Vector3.down * (dropTargetExtraY * clawDropTarget.lossyScale.y);
                         target.transform.DOMove(dropPosition, dropFallDuration)
                             .SetEase(Ease.InQuad)
-                            .OnComplete(() => PlayWinSequence(target));
+                            .OnComplete(() => DOVirtual.DelayedCall(winSlotDelay, () => PlayWinSequence(target)).SetLink(gameObject));
                     });
                 });
         }
@@ -285,27 +315,35 @@ namespace tmkoc.claw
         private void PlayWinSequence(ObjectController target)
         {
             RectTransform targetRect = (RectTransform)target.transform;
-            targetRect.SetParent(winningParent, true);
+            targetRect.SetParent(winningParent, false);
 
-            // The toy came from a layout group, so its anchors/pivot aren't centered; fix them without moving it.
-            Vector3 worldPosition = targetRect.position;
+            // The toy came from a layout group, so its anchors/pivot aren't centered.
             targetRect.anchorMin = targetRect.anchorMax = targetRect.pivot = new Vector2(0.5f, 0.5f);
-            targetRect.position = worldPosition;
 
+            // Appear from the machine slot (winningParent1) and travel to winningParent2 while scaling and spinning.
+            targetRect.position = winningParent1.position;
+            targetRect.localScale = Vector3.zero;
+            targetRect.localRotation = Quaternion.identity;
+
+            targetRect.DOMove(winningParent2.position, winMoveDuration).SetEase(Ease.OutQuad);
+            targetRect.DOScale(winScale, winMoveDuration).SetEase(Ease.OutBack);
+            targetRect.DORotate(new Vector3(0f, 360f, 0f), winMoveDuration, RotateMode.FastBeyond360)
+                .SetEase(Ease.Linear)
+                .OnComplete(() => PlayShineAndFinish(winningParent2.position));
+            confettiEffect.Play();
+        }
+
+        private void PlayShineAndFinish(Vector3 shineWorldPosition)
+        {
             RectTransform shineRect = shineImage.rectTransform;
             shineRect.SetParent(winningParent, false);
-            shineRect.anchoredPosition = Vector2.zero;
+            shineRect.position = shineWorldPosition;
             shineRect.SetAsFirstSibling();
             shineImage.gameObject.SetActive(true);
             shineRect.DORotate(new Vector3(0f, 0f, -360f), shineSpinDuration, RotateMode.FastBeyond360)
                 .SetEase(Ease.Linear)
                 .SetLoops(-1, LoopType.Incremental)
                 .SetLink(shineImage.gameObject);
-
-            targetRect.DOAnchorPos(Vector2.zero, winScaleDuration).SetEase(Ease.OutBack);
-            targetRect.DOScale(winScale, winScaleDuration).SetEase(Ease.OutBack);
-            confettiEffect.Play();
-            targetRect.DORotate(new Vector3(0f, 360f, 0f), winSpinDuration, RotateMode.FastBeyond360).SetEase(Ease.Linear);
 
             DOVirtual.DelayedCall(winPanelDelay, () =>
             {
@@ -333,6 +371,7 @@ namespace tmkoc.claw
                 .SetLink(stopButton.gameObject)
                 .OnComplete(() => stopButton.interactable = true);
             StartHorizontalCycle();
+            handTutorialManager.StartIdleWatch();
         }
 
         private void CloseHands(Action onComplete)

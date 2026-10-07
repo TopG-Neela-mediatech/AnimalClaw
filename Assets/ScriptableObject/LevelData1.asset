@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   options: 010000000200000003000000
   spriteData: {fileID: 11400000, guid: 50c32b97f3d5834448a45464ff38824f, type: 2}
-  correctObject: 1
+  correctObject: 3
   lives: 3
   timeInSeconds: 60

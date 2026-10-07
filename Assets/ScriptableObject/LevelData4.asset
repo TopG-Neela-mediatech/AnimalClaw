@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e5672662d0f9504e81d2dfd6a948851, type: 3}
   m_Name: LevelData4
   m_EditorClassIdentifier: 
-  options: 0b0000000c0000000d0000000a000000
+  options: 0b000000060000000d0000000a000000
   spriteData: {fileID: 11400000, guid: 50c32b97f3d5834448a45464ff38824f, type: 2}
-  correctObject: 13
+  correctObject: 6
   lives: 3
   timeInSeconds: 60
