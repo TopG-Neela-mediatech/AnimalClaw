@@ -265,6 +265,8 @@ namespace tmkoc.claw
 
         private void GrabAndRise(ObjectController target, bool isCorrect)
         {
+            GameManager.Instance.SoundManager.PlaySfx(isCorrect ? SfxType.Correct : SfxType.Incorrect);
+
             Vector3 originalWorldPosition = target.transform.position;
             int originalSiblingIndex = target.transform.GetSiblingIndex();
             target.transform.SetParent(clawStick, true);
@@ -319,7 +321,7 @@ namespace tmkoc.claw
         private void PlayWinSequence(ObjectController target)
         {
             SoundManager soundManager = GameManager.Instance.SoundManager;
-            soundManager.StopAllExceptBGM();
+            soundManager.StopVoiceAndAnimal();
             soundManager.PlayAnimalOutro(target.ObjectType);
 
             RectTransform targetRect = (RectTransform)target.transform;

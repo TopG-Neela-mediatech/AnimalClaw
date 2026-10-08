@@ -7,9 +7,8 @@ namespace tmkoc.claw
     public class SoundManager : MonoBehaviour
     {
         [SerializeField] private AudioMapper audioMapper;
-        [SerializeField] private AudioSource bgmSource;
         [SerializeField] private AudioSource sfxSource;
-        [SerializeField] private AudioSource correctSFX;
+        [SerializeField] private SfxSound[] sfxSounds;
         [SerializeField] private AudioSource animalSource;
         [SerializeField] private AnimalSound[] animalSounds;
         [SerializeField] private Button animalSoundButton;
@@ -21,21 +20,24 @@ namespace tmkoc.claw
             animalSoundButton.onClick.AddListener(OnAnimalSoundButtonClicked);
         }
 
-        public void PlayBGM()
-        {
-            if (bgmSource.isPlaying) { return; }
-            bgmSource.Play();
-        }
-        public void StopBGM() => bgmSource.Stop();
-        public void StopAllExceptBGM()
+        // Stops the level-start sequence, the animal sound and any voice-over. Music and SFX are left alone.
+        public void StopVoiceAndAnimal()
         {
             StopLevelStartSequence();
             animalSource.Stop();
-            if (sfxSource != null) sfxSource.Stop();
-            if (correctSFX != null) correctSFX.Stop();
+            RuntimeAudioLoader.Instance.StopCommonAudioSource();
         }
-        public void PlaySfx() => sfxSource.Play();
-        public void PlayCorrectSFX() => correctSFX.Play();
+
+        public void PlaySfx(SfxType sfxType)
+        {
+            foreach (SfxSound sfxSound in sfxSounds)
+            {
+                if (sfxSound.sfxType != sfxType) continue;
+                sfxSource.PlayOneShot(sfxSound.clip);
+                return;
+            }
+            Debug.LogWarning("SoundManager: no SFX assigned for " + sfxType);
+        }
 
         public float PlayIntroSlide(int slideIndex)
         {
@@ -108,6 +110,19 @@ namespace tmkoc.claw
             if (animalSource.isPlaying) return;
             PlayAnimalSound();
         }
+    }
+
+    public enum SfxType
+    {
+        Correct,
+        Incorrect
+    }
+
+    [System.Serializable]
+    public class SfxSound
+    {
+        public SfxType sfxType;
+        public AudioClip clip;
     }
 
     [System.Serializable]
