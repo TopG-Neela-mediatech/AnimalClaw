@@ -23,13 +23,8 @@ namespace tmkoc.claw
 
         private Coroutine idleRoutine;
 
-        private const string TutorialDoneKey = "AnimalClawTutorialDone";
-
-        // The guided first level only ever plays once, until the user has tapped through it.
-        public bool IsTutorialLevel =>
-            GameManager.Instance.LevelManager.currentLevelIndex == 0 && PlayerPrefs.GetInt(TutorialDoneKey, 0) == 0;
-
-        public void MarkTutorialDone() => PlayerPrefs.SetInt(TutorialDoneKey, 1);
+        // Progress comes from the Playschool level category: the guided tutorial is level index 0.
+        public bool IsTutorialLevel => GameManager.Instance.LevelManager.currentLevelIndex == 0;
 
         private void Awake()
         {

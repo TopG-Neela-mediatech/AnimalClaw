@@ -80,6 +80,8 @@ namespace tmkoc.claw
         private float restAnchoredY;
         private float restWorldY;
         private Vector3 centerWorldPosition;
+        private Vector2 initialClawAnchoredPosition;
+        private Vector3 initialClawScale;
         private Vector3 leftHandStartEuler;
         private Vector3 rightHandStartEuler;
 
@@ -90,9 +92,56 @@ namespace tmkoc.claw
 
         private void Start()
         {
-            stopButton.interactable = false;
             leftHandStartEuler = clawLeftHand.localEulerAngles;
             rightHandStartEuler = clawRightHand.localEulerAngles;
+            initialClawAnchoredPosition = clawStick.anchoredPosition;
+            initialClawScale = clawStick.localScale;
+
+            GameManager.Instance.OnLevelReset += ResetLevel;
+            SetupLevel();
+        }
+
+        // Puts everything back to its initial state so the next level can start without reloading the scene.
+        private void ResetLevel()
+        {
+            GameManager.Instance.OnLevelStart -= BeginGameplay;
+            horizontalTween?.Kill();
+            handTutorialManager.StopHint();
+            StopTutorialPulse();
+            clawStick.DOKill();
+            clawLeftHand.DOKill();
+            clawRightHand.DOKill();
+            stopButton.transform.DOKill();
+            shineImage.rectTransform.DOKill();
+            confettiEffect.Stop(true);
+
+            // Disable before destroying so the layout rebuild in SetupLevel ignores the old toys.
+            foreach (ObjectController controller in objectControllers)
+            {
+                controller.transform.DOKill();
+                controller.gameObject.SetActive(false);
+                Destroy(controller.gameObject);
+            }
+            objectControllers.Clear();
+
+            clawStick.anchoredPosition = initialClawAnchoredPosition;
+            clawStick.localScale = initialClawScale;
+            clawLeftHand.localEulerAngles = leftHandStartEuler;
+            clawRightHand.localEulerAngles = rightHandStartEuler;
+
+            Vector3 buttonScale = stopButton.transform.localScale;
+            buttonScale.y = buttonRestScaleY;
+            stopButton.transform.localScale = buttonScale;
+
+            tutorialTarget = null;
+            moveDirection = -1f;
+            objectLayoutGroup.enabled = true;
+            SetupLevel();
+        }
+
+        private void SetupLevel()
+        {
+            stopButton.interactable = false;
 
             SpawnObjectControllers();
             ApplyCellSize();
@@ -114,6 +163,7 @@ namespace tmkoc.claw
             }
             else
             {
+                GameManager.Instance.OnLevelStart -= BeginGameplay;
                 GameManager.Instance.OnLevelStart += BeginGameplay;
             }
         }
@@ -283,10 +333,6 @@ namespace tmkoc.claw
             StopTutorialPulse();
 
             ObjectController target = tutorialTarget != null ? tutorialTarget : PickTargetAhead();
-            if (tutorialTarget != null)
-            {
-                handTutorialManager.MarkTutorialDone();
-            }
             tutorialTarget = null;
             bool isCorrect = target.ObjectType == GameManager.Instance.LevelManager.CorrectObject;
             Debug.Log(isCorrect ? "Correct" : "Incorrect");
@@ -453,6 +499,7 @@ namespace tmkoc.claw
         private void OnDestroy()
         {
             GameManager.Instance.OnLevelStart -= BeginGameplay;
+            GameManager.Instance.OnLevelReset -= ResetLevel;
             horizontalTween?.Kill();
             clawStick.DOKill();
         }

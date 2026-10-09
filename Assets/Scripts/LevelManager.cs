@@ -18,8 +18,6 @@ namespace tmkoc.claw
         public ObjectController ObjectControllerPrefab => objectControllerPrefab;
         public bool HasLevelStarted { get; private set; }
 
-        private const string StorySeenKey = "AnimalClawStorySeen";
-
         private void StartLevel()
         {
             HasLevelStarted = true;
@@ -38,8 +36,8 @@ namespace tmkoc.claw
             GameManager.Instance.OnLevelStart += OnLevelStart;
             GameManager.Instance.OnLevelWin += OnLevelWin;
 
-            bool isFirstTime = currentLevelIndex == 0 && PlayerPrefs.GetInt(StorySeenKey, 0) == 0;
-            if (isFirstTime)
+            // Progress comes from the Playschool level category: no saved progress means a first launch, so play the story.
+            if (currentLevelIndex == 0)
             {
                 storyController.OnStoryFinished += OnStoryFinished;
                 storyController.gameObject.SetActive(true);
@@ -53,7 +51,6 @@ namespace tmkoc.claw
         {
             storyController.OnStoryFinished -= OnStoryFinished;
             storyController.gameObject.SetActive(false);
-            PlayerPrefs.SetInt(StorySeenKey, 1);
             StartLevel();
         }
         private void OnLevelStart()
@@ -99,15 +96,24 @@ namespace tmkoc.claw
         public void LoadNextLevel()
         {
             SaveLevel();
-            ReloadScene();
+            RestartLevel();
         }
         public void RetryLevel()
         {
-            ReloadScene();
+            RestartLevel();
         }
-        private void ReloadScene()
+        // Restarts the current level index in place (index 0 after the last level) without reloading the scene.
+        private void RestartLevel()
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            if (currentLevelIndex >= levels.Length)
+            {
+                currentLevelIndex = 0;
+            }
+            currentLevelData = levels[currentLevelIndex];
+            HasLevelStarted = false;
+            GameManager.Instance.SoundManager.StopVoiceAndAnimal();
+            GameManager.Instance.InvokeLevelReset();
+            StartLevel();
         }
         private void OnDestroy()
         {

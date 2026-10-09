@@ -18,6 +18,17 @@ namespace tmkoc.claw
 
         private void Start()
         {
+            GameManager.Instance.OnLevelReset += ResetLives;
+            ResetLives();
+        }
+
+        private void OnDestroy()
+        {
+            GameManager.Instance.OnLevelReset -= ResetLives;
+        }
+
+        private void ResetLives()
+        {
             currentLives = GameManager.Instance.LevelManager.CurrentLevelData.Lives;
             UpdateLivesText();
         }

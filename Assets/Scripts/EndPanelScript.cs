@@ -96,6 +96,7 @@ namespace tmkoc.claw
         }
         private void RotateRaysLoop(RectTransform rays, float duration = 8f, bool clockwise = true)
         {
+            rays.DOKill();
             float angle = clockwise ? -360f : 360f;
             rays.DORotate(new Vector3(0f, 0f, angle), duration, RotateMode.FastBeyond360)
                 .SetEase(Ease.Linear)
