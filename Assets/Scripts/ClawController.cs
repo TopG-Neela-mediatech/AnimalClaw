@@ -27,6 +27,10 @@ namespace tmkoc.claw
         [SerializeField] private float buttonPressedScaleY = 0.8f;
         [SerializeField] private float buttonPressDuration = 0.1f;
 
+        [Header("Tutorial Pulse")]
+        [SerializeField] private float tutorialPulseScale = 1.1f;
+        [SerializeField] private float tutorialPulseDuration = 0.4f;
+
         [Header("Claw Movement")]
         [SerializeField] private float clawSpeed = 400f;
         [SerializeField] private Vector2 clawHorizontalRange = new Vector2(-400f, 400f);
@@ -67,7 +71,10 @@ namespace tmkoc.claw
         private readonly List<ObjectController> objectControllers = new List<ObjectController>();
 
         private Tween horizontalTween;
+        private const string TutorialPulseId = "TutorialPulse";
         private ObjectController tutorialTarget;
+        private Transform[] pulseTargets;
+        private Vector3[] pulseBaseScales;
         private float moveDirection = -1f;
         private float lastClawX;
         private float restAnchoredY;
@@ -137,7 +144,35 @@ namespace tmkoc.claw
                 {
                     stopButton.interactable = true;
                     handTutorialManager.ShowTutorialHint();
+                    StartTutorialPulse();
                 });
+        }
+
+        // Pulse the claw and the correct toy so the child sees which one to pick.
+        private void StartTutorialPulse()
+        {
+            pulseTargets = new[] { clawStick.transform, tutorialTarget.transform };
+            pulseBaseScales = new[] { clawStick.localScale, tutorialTarget.transform.localScale };
+            for (int i = 0; i < pulseTargets.Length; i++)
+            {
+                pulseTargets[i].DOScale(pulseBaseScales[i] * tutorialPulseScale, tutorialPulseDuration)
+                    .SetEase(Ease.InOutSine)
+                    .SetLoops(-1, LoopType.Yoyo)
+                    .SetId(TutorialPulseId)
+                    .SetLink(pulseTargets[i].gameObject);
+            }
+        }
+
+        private void StopTutorialPulse()
+        {
+            if (pulseTargets == null) return;
+
+            DOTween.Kill(TutorialPulseId);
+            for (int i = 0; i < pulseTargets.Length; i++)
+            {
+                pulseTargets[i].localScale = pulseBaseScales[i];
+            }
+            pulseTargets = null;
         }
 
         private void SpawnObjectControllers()
@@ -245,6 +280,7 @@ namespace tmkoc.claw
             horizontalTween?.Kill();
             PlayButtonPress();
             handTutorialManager.StopHint();
+            StopTutorialPulse();
 
             ObjectController target = tutorialTarget != null ? tutorialTarget : PickTargetAhead();
             tutorialTarget = null;

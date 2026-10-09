@@ -58,7 +58,7 @@ namespace tmkoc.claw
         }
         private void OnLevelStart()
         {
-            GameManager.Instance.SoundManager.PlayLevelStartSequence();
+            GameManager.Instance.SoundManager.PlayLevelStartSequence(currentLevelIndex == 0);
         }
         private void OnLevelWin()
         {

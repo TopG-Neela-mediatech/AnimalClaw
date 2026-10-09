@@ -64,17 +64,24 @@ namespace tmkoc.claw
         }
 
         // Level start: "Let's hear the sound" -> animal sound -> "Can you find it and press the button?"
-        public void PlayLevelStartSequence()
+        public void PlayLevelStartSequence(bool isTutorial)
         {
             StopLevelStartSequence();
-            levelStartRoutine = StartCoroutine(LevelStartRoutine());
+            levelStartRoutine = StartCoroutine(LevelStartRoutine(isTutorial));
         }
 
-        private IEnumerator LevelStartRoutine()
+        private IEnumerator LevelStartRoutine(bool isTutorial)
         {
             yield return new WaitForSeconds(Mathf.Max(0f, PlayLevelIntro()));
             yield return new WaitForSeconds(Mathf.Max(0f, PlayAnimalSound()));
-            PlayLevelPrompt();
+            if (isTutorial)
+            {
+                RuntimeAudioLoader.Instance.PlayRuntimeAudio(audioMapper.tutorialPrompt);
+            }
+            else
+            {
+                PlayLevelPrompt();
+            }
             levelStartRoutine = null;
         }
 
@@ -138,6 +145,7 @@ namespace tmkoc.claw
         public string[] introSlides = { "slide1", "slide2", "slide3" };
         public string[] levelIntros = { "levelintro1", "levelintro2", "levelintro3" };
         public string[] levelPrompts = { "levelprompt1", "levelprompt2", "levelprompt3" };
+        public string tutorialPrompt = "tutorialprompt";
         public string outro = "finaloutro";
     }
 }
