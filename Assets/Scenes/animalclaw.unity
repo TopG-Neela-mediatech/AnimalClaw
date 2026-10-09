@@ -2470,25 +2470,26 @@ MonoBehaviour:
     - levelprompt1
     - levelprompt2
     - levelprompt3
+    tutorialPrompt: tutorialprompt
     outro: finaloutro
   sfxSource: {fileID: 887337797}
   sfxSounds:
   - sfxType: 0
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 5d175188c29cde647b8f9a573004facb, type: 3}
   - sfxType: 1
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 3425b86011051e24d837c7d425f079cb, type: 3}
   animalSource: {fileID: 525535765}
   animalSounds:
   - objectType: 3
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: d84f0c7e80ae3074490ff758c3530c3a, type: 3}
   - objectType: 5
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 3218124f8a348cf4e9f94d7979964719, type: 3}
   - objectType: 8
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 02e06cff794dae24889471f31dc529e2, type: 3}
   - objectType: 6
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 98cbef8fbb6b02b45bdebfbb11b3b3af, type: 3}
   - objectType: 1
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: ea65b0a8871dd9d429adc0b1162bb961, type: 3}
   animalSoundButton: {fileID: 968074135}
 --- !u!1 &968074133
 GameObject:
@@ -4215,6 +4216,8 @@ MonoBehaviour:
   buttonRestScaleY: 1.5
   buttonPressedScaleY: 0.8
   buttonPressDuration: 0.1
+  tutorialPulseScale: 1.1
+  tutorialPulseDuration: 0.4
   clawSpeed: 250
   clawHorizontalRange: {x: -50, y: 325}
   clawDropMaxY: -275
