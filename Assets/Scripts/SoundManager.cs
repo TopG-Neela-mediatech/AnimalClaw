@@ -15,6 +15,8 @@ namespace tmkoc.claw
 
         private Coroutine levelStartRoutine;
 
+        public bool IsLevelStartSequenceRunning => levelStartRoutine != null;
+
         private void Awake()
         {
             animalSoundButton.onClick.AddListener(OnAnimalSoundButtonClicked);

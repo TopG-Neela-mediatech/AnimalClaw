@@ -283,6 +283,10 @@ namespace tmkoc.claw
             StopTutorialPulse();
 
             ObjectController target = tutorialTarget != null ? tutorialTarget : PickTargetAhead();
+            if (tutorialTarget != null)
+            {
+                handTutorialManager.MarkTutorialDone();
+            }
             tutorialTarget = null;
             bool isCorrect = target.ObjectType == GameManager.Instance.LevelManager.CorrectObject;
             Debug.Log(isCorrect ? "Correct" : "Incorrect");

@@ -23,7 +23,13 @@ namespace tmkoc.claw
 
         private Coroutine idleRoutine;
 
-        public bool IsTutorialLevel => GameManager.Instance.LevelManager.currentLevelIndex == 0;
+        private const string TutorialDoneKey = "AnimalClawTutorialDone";
+
+        // The guided first level only ever plays once, until the user has tapped through it.
+        public bool IsTutorialLevel =>
+            GameManager.Instance.LevelManager.currentLevelIndex == 0 && PlayerPrefs.GetInt(TutorialDoneKey, 0) == 0;
+
+        public void MarkTutorialDone() => PlayerPrefs.SetInt(TutorialDoneKey, 1);
 
         private void Awake()
         {
@@ -56,6 +62,10 @@ namespace tmkoc.claw
 
         private IEnumerator IdleRoutine()
         {
+            // The idle timer starts only once the level-start voice-over has finished (one frame lets it begin first).
+            yield return null;
+            yield return new WaitUntil(() => !GameManager.Instance.SoundManager.IsLevelStartSequenceRunning);
+
             while (true)
             {
                 yield return new WaitForSeconds(idleDelay);
