@@ -15,8 +15,7 @@ MonoBehaviour:
   slides:
   - backgroundSprite: {fileID: 21300000, guid: e0ddde8c3d2c1334f808ef9b8079740c, type: 3}
     foregroundSprite: {fileID: 21300000, guid: 1b76f0c27b74cf146b1856803d1fd8c5, type: 3}
-    captionText: Oh no! It rained so much that the roads are flooded! Some of our
-      friends need our help!
+    captionText: Wow! Welcome to the big, colourful fun fair!
     displayDuration: 3
     transitionIn: 0
     transitionOut: 1
@@ -24,8 +23,7 @@ MonoBehaviour:
     slideEnterSFX: {fileID: 0}
   - backgroundSprite: {fileID: 21300000, guid: e0ddde8c3d2c1334f808ef9b8079740c, type: 3}
     foregroundSprite: {fileID: 21300000, guid: 073f3219bc942b34ab002ae4e6dc364c, type: 3}
-    captionText: Can you help the ambulance find a safe way to the hospital? Our
-      friends are waiting!
+    captionText: Look! There is a giant Claw Machine, full of animal and bird toys!
     displayDuration: 3
     transitionIn: 0
     transitionOut: 1
@@ -33,8 +31,7 @@ MonoBehaviour:
     slideEnterSFX: {fileID: 0}
   - backgroundSprite: {fileID: 21300000, guid: e0ddde8c3d2c1334f808ef9b8079740c, type: 3}
     foregroundSprite: {fileID: 21300000, guid: cd934fb404258084a82b3e9b5d9dfcba, type: 3}
-    captionText: I knew you could do it! Let's guide the ambulance and save our friends
-      together!
+    captionText: Listen carefully to the sound, and grab the right toy! Let's play!
     displayDuration: 3
     transitionIn: 0
     transitionOut: 1
