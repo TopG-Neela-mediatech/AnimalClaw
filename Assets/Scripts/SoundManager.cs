@@ -1,4 +1,5 @@
 using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,13 +13,19 @@ namespace tmkoc.claw
         [SerializeField] private AudioSource animalSource;
         [SerializeField] private AnimalSound[] animalSounds;
         [SerializeField] private Button animalSoundButton;
+        [SerializeField] private float buttonPulseScale = 1.15f;
+        [SerializeField] private float buttonPulseDuration = 0.35f;
 
+        private const string ButtonPulseId = "SoundButtonPulse";
         private Coroutine levelStartRoutine;
+        private Coroutine incorrectRoutine;
+        private Vector3 buttonBaseScale;
 
         public bool IsLevelStartSequenceRunning => levelStartRoutine != null;
 
         private void Awake()
         {
+            buttonBaseScale = animalSoundButton.transform.localScale;
             animalSoundButton.onClick.AddListener(OnAnimalSoundButtonClicked);
         }
 
@@ -26,8 +33,52 @@ namespace tmkoc.claw
         public void StopVoiceAndAnimal()
         {
             StopLevelStartSequence();
+            StopIncorrectLine();
             animalSource.Stop();
             RuntimeAudioLoader.Instance.StopCommonAudioSource();
+        }
+
+        // "Oh no, that's not the animal, listen again", then pulse the sound button until it is pressed.
+        public void PlayIncorrectLine()
+        {
+            StopIncorrectLine();
+            incorrectRoutine = StartCoroutine(IncorrectLineRoutine());
+        }
+
+        private IEnumerator IncorrectLineRoutine()
+        {
+            int rand = Random.Range(0, audioMapper.incorrectLines.Length);
+            float length = RuntimeAudioLoader.Instance.PlayRuntimeAudio(audioMapper.incorrectLines[rand]);
+            yield return new WaitForSeconds(Mathf.Max(0f, length));
+            incorrectRoutine = null;
+            StartButtonPulse();
+        }
+
+        private void StopIncorrectLine()
+        {
+            if (incorrectRoutine != null)
+            {
+                StopCoroutine(incorrectRoutine);
+                incorrectRoutine = null;
+            }
+            StopButtonPulse();
+        }
+
+        private void StartButtonPulse()
+        {
+            StopButtonPulse();
+            Transform buttonTransform = animalSoundButton.transform;
+            buttonTransform.DOScale(buttonBaseScale * buttonPulseScale, buttonPulseDuration)
+                .SetEase(Ease.InOutSine)
+                .SetLoops(-1, LoopType.Yoyo)
+                .SetId(ButtonPulseId)
+                .SetLink(buttonTransform.gameObject);
+        }
+
+        private void StopButtonPulse()
+        {
+            DOTween.Kill(ButtonPulseId);
+            animalSoundButton.transform.localScale = buttonBaseScale;
         }
 
         public void PlaySfx(SfxType sfxType)
@@ -116,6 +167,7 @@ namespace tmkoc.claw
         // Replay button: only plays the animal sound, and is ignored while it is already playing.
         private void OnAnimalSoundButtonClicked()
         {
+            StopButtonPulse();
             if (animalSource.isPlaying) return;
             PlayAnimalSound();
         }
@@ -147,6 +199,7 @@ namespace tmkoc.claw
         public string[] introSlides = { "slide1", "slide2", "slide3" };
         public string[] levelIntros = { "levelintro1", "levelintro2", "levelintro3" };
         public string[] levelPrompts = { "levelprompt1", "levelprompt2", "levelprompt3" };
+        public string[] incorrectLines = { "wronganimal1", "wronganimal2", "wronganimal3" };
         public string tutorialPrompt = "tutorialprompt";
         public string outro = "finaloutro";
     }

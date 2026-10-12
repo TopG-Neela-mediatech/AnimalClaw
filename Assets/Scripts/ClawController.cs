@@ -351,7 +351,10 @@ namespace tmkoc.claw
 
         private void GrabAndRise(ObjectController target, bool isCorrect)
         {
-            GameManager.Instance.SoundManager.PlaySfx(isCorrect ? SfxType.Correct : SfxType.Incorrect);
+            if (isCorrect)
+            {
+                GameManager.Instance.SoundManager.PlaySfx(SfxType.Correct);
+            }
 
             Vector3 originalWorldPosition = target.transform.position;
             int originalSiblingIndex = target.transform.GetSiblingIndex();
@@ -372,6 +375,7 @@ namespace tmkoc.claw
 
         private void PlayIncorrectDrop(ObjectController target, Vector3 originalWorldPosition, int originalSiblingIndex)
         {
+            GameManager.Instance.SoundManager.PlaySfx(SfxType.Incorrect);
             clawStick.DOShakeAnchorPos(clawShakeDuration, clawShakeStrength)
                 .OnComplete(() =>
                 {
@@ -468,6 +472,7 @@ namespace tmkoc.claw
                 .OnComplete(() => stopButton.interactable = true);
             StartHorizontalCycle();
             handTutorialManager.StartIdleWatch();
+            GameManager.Instance.SoundManager.PlayIncorrectLine();
         }
 
         private void CloseHands(Action onComplete)
