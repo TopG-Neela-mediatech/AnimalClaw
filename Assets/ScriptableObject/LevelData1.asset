@@ -17,3 +17,5 @@ MonoBehaviour:
   correctObject: 3
   lives: 3
   timeInSeconds: 60
+  winSprite: {fileID: 21300000, guid: f4f662873c1ce5c488a90b25e4a7dd36, type: 3}
+  loseSprite: {fileID: 21300000, guid: 1b85424c3ee069849bd9beb7e27c7097, type: 3}

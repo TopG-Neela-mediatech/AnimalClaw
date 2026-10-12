@@ -27,6 +27,10 @@ namespace tmkoc.claw
         [SerializeField] private float buttonPressedScaleY = 0.8f;
         [SerializeField] private float buttonPressDuration = 0.1f;
 
+        [Header("Object Idle Pulse")]
+        [SerializeField] private float objectPulseStrength = 0.1f;
+        [SerializeField] private float objectPulseDuration = 0.6f;
+
         [Header("Tutorial Pulse")]
         [SerializeField] private float tutorialPulseScale = 1.1f;
         [SerializeField] private float tutorialPulseDuration = 0.4f;
@@ -82,6 +86,8 @@ namespace tmkoc.claw
         private Vector3 centerWorldPosition;
         private Vector2 initialClawAnchoredPosition;
         private Vector3 initialClawScale;
+        private readonly Dictionary<ObjectController, Vector3> objectBaseScales = new Dictionary<ObjectController, Vector3>();
+        private const string ObjectPulseId = "ObjectPulse";
         private Vector3 leftHandStartEuler;
         private Vector3 rightHandStartEuler;
 
@@ -108,6 +114,7 @@ namespace tmkoc.claw
             horizontalTween?.Kill();
             handTutorialManager.StopHint();
             StopTutorialPulse();
+            StopObjectPulse();
             clawStick.DOKill();
             clawLeftHand.DOKill();
             clawRightHand.DOKill();
@@ -181,6 +188,36 @@ namespace tmkoc.claw
             stopButton.interactable = true;
             StartHorizontalCycle();
             handTutorialManager.StartIdleWatch();
+            StartObjectPulse();
+        }
+
+        // Idle animation: every toy pulses on its own until the claw starts to move.
+        private void StartObjectPulse()
+        {
+            StopObjectPulse();
+            foreach (ObjectController controller in objectControllers)
+            {
+                Transform toy = controller.transform;
+                objectBaseScales[controller] = toy.localScale;
+                toy.DOScale(toy.localScale * (1f + objectPulseStrength), objectPulseDuration)
+                    .SetEase(Ease.InOutSine)
+                    .SetLoops(-1, LoopType.Yoyo)
+                    .SetId(ObjectPulseId)
+                    .SetLink(toy.gameObject);
+            }
+        }
+
+        private void StopObjectPulse()
+        {
+            DOTween.Kill(ObjectPulseId);
+            foreach (KeyValuePair<ObjectController, Vector3> baseScale in objectBaseScales)
+            {
+                if (baseScale.Key != null)
+                {
+                    baseScale.Key.transform.localScale = baseScale.Value;
+                }
+            }
+            objectBaseScales.Clear();
         }
 
         // First level: park the claw above the correct toy and prompt the user to tap.
@@ -331,6 +368,8 @@ namespace tmkoc.claw
             PlayButtonPress();
             handTutorialManager.StopHint();
             StopTutorialPulse();
+            StopObjectPulse();
+            GameManager.Instance.SoundManager.StopSoundButtonPulse();
 
             ObjectController target = tutorialTarget != null ? tutorialTarget : PickTargetAhead();
             tutorialTarget = null;
@@ -472,6 +511,7 @@ namespace tmkoc.claw
                 .OnComplete(() => stopButton.interactable = true);
             StartHorizontalCycle();
             handTutorialManager.StartIdleWatch();
+            StartObjectPulse();
             GameManager.Instance.SoundManager.PlayIncorrectLine();
         }
 

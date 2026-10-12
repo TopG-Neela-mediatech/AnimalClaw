@@ -12,8 +12,8 @@ namespace tmkoc.claw
         public static EndPanelScript Instance { get; private set; }
 
         [Header("References")]
-        [SerializeField] private Image winChrachterImage;
-        [SerializeField] private Image loseChrachterImage;
+        [SerializeField] private Image winImage;
+        [SerializeField] private Image loseImage;
         [SerializeField] private RectTransform winPanel;
         [SerializeField] private RectTransform losePanel;
         [SerializeField] private Button retryButton;
@@ -62,6 +62,7 @@ namespace tmkoc.claw
         // Public API
         public void ShowWin()
         {
+            winImage.sprite = GameManager.Instance.LevelManager.CurrentLevelData.WinSprite;
             Show(winPanel, nextButton);
             onActionButtonClicked = () => GameManager.Instance.LevelManager.LoadNextLevel();
             RotateRaysLoop(winRaysT, 8f, true);
@@ -69,6 +70,7 @@ namespace tmkoc.claw
 
         public void ShowLose()
         {
+            loseImage.sprite = GameManager.Instance.LevelManager.CurrentLevelData.LoseSprite;
             Show(losePanel, retryButton);
             onActionButtonClicked = () => GameManager.Instance.LevelManager.RetryLevel();
             RotateRaysLoop(loseRaysT, 8f, false);

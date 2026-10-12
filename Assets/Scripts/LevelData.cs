@@ -10,11 +10,15 @@ namespace tmkoc.claw
         [SerializeField] private Objects correctObject;
         [SerializeField] private int lives = 3;
         [SerializeField] private float timeInSeconds; // reserved for a future timer feature
+        [SerializeField] private Sprite winSprite;
+        [SerializeField] private Sprite loseSprite;
 
         public Objects[] Options => options;
         public SpriteDataSO SpriteData => spriteData;
         public Objects CorrectObject => correctObject;
         public int Lives => lives;
         public float TimeInSeconds => timeInSeconds;
+        public Sprite WinSprite => winSprite;
+        public Sprite LoseSprite => loseSprite;
     }
 }

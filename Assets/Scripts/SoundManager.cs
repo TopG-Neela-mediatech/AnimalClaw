@@ -54,6 +54,9 @@ namespace tmkoc.claw
             StartButtonPulse();
         }
 
+        // Cancels the pending pulse (if the line is still playing) and stops the one that is running.
+        public void StopSoundButtonPulse() => StopIncorrectLine();
+
         private void StopIncorrectLine()
         {
             if (incorrectRoutine != null)
