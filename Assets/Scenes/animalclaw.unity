@@ -4312,8 +4312,8 @@ MonoBehaviour:
   buttonRestScaleY: 1.5
   buttonPressedScaleY: 0.8
   buttonPressDuration: 0.1
-  objectPulseScale: 1.05
-  objectPulseDuration: 0.6
+  objectPulseStrength: 0.05
+  objectPulseDuration: 0.75
   tutorialPulseScale: 1.1
   tutorialPulseDuration: 0.4
   clawSpeed: 250
