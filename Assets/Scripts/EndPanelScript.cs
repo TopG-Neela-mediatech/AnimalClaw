@@ -1,3 +1,4 @@
+using System.Collections;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,8 +17,6 @@ namespace tmkoc.claw
         [SerializeField] private Image loseImage;
         [SerializeField] private RectTransform winPanel;
         [SerializeField] private RectTransform losePanel;
-        [SerializeField] private Button retryButton;
-        [SerializeField] private Button nextButton;
         [SerializeField] private Button[] homeButtons;
         [SerializeField] private RectTransform winRaysT;
         [SerializeField] private RectTransform loseRaysT;
@@ -29,22 +28,20 @@ namespace tmkoc.claw
         [SerializeField] private Ease slideInEase = Ease.OutBack;
         [SerializeField] private Ease slideOutEase = Ease.InBack;
 
+        [Header("Auto Hide")]
+        [SerializeField] private float minDisplayTime = 5f;
 
         public bool IsShowing => (winPanel != null && winPanel.gameObject.activeSelf) || (losePanel != null && losePanel.gameObject.activeSelf);
 
         private RectTransform activePanel;
-        private Button activeButton;
-        private Action onActionButtonClicked;
+        private Action onPanelHidden;
+        private Coroutine autoHideRoutine;
 
         private void Awake()
         {
             Instance = this;
             winPanel.gameObject.SetActive(false);
             losePanel.gameObject.SetActive(false);
-            retryButton.gameObject.SetActive(false);
-            nextButton.gameObject.SetActive(false);
-            retryButton.onClick.AddListener(OnButtonClicked);
-            nextButton.onClick.AddListener(OnButtonClicked);
         }
         private void Start()
         {
@@ -63,32 +60,42 @@ namespace tmkoc.claw
         public void ShowWin()
         {
             winImage.sprite = GameManager.Instance.LevelManager.CurrentLevelData.WinSprite;
-            Show(winPanel, nextButton);
-            onActionButtonClicked = () => GameManager.Instance.LevelManager.LoadNextLevel();
+            Show(winPanel, () => GameManager.Instance.LevelManager.LoadNextLevel());
             RotateRaysLoop(winRaysT, 8f, true);
         }
 
         public void ShowLose()
         {
             loseImage.sprite = GameManager.Instance.LevelManager.CurrentLevelData.LoseSprite;
-            Show(losePanel, retryButton);
-            onActionButtonClicked = () => GameManager.Instance.LevelManager.RetryLevel();
+            Show(losePanel, () => GameManager.Instance.LevelManager.RetryLevel());
             RotateRaysLoop(loseRaysT, 8f, false);
         }
 
-        private void Show(RectTransform panel, Button button)
+        private void Show(RectTransform panel, Action onHidden)
         {
-          //  GameManager.Instance.SoundManager.StopAllExceptBGM();
-
             activePanel = panel;
-            activeButton = button;
+            onPanelHidden = onHidden;
 
             panel.gameObject.SetActive(true);
             panel.DOKill();
             panel.anchoredPosition = OffScreenPos(panel);
-            panel.DOAnchorPos(onScreenAnchoredPos, slideInDuration)
-                .SetEase(slideInEase)
-                .OnComplete(() => button.gameObject.SetActive(true));
+            panel.DOAnchorPos(onScreenAnchoredPos, slideInDuration).SetEase(slideInEase);
+
+            if (autoHideRoutine != null)
+            {
+                StopCoroutine(autoHideRoutine);
+            }
+            autoHideRoutine = StartCoroutine(AutoHideRoutine());
+        }
+
+        // Stay up for minDisplayTime, or until the voice-over that is playing has finished if that takes longer.
+        private IEnumerator AutoHideRoutine()
+        {
+            yield return new WaitForSeconds(minDisplayTime);
+            AudioSource voiceSource = RuntimeAudioLoader.Instance._commonAudioSource;
+            yield return new WaitUntil(() => !voiceSource.isPlaying);
+            autoHideRoutine = null;
+            HidePanel();
         }
 
         // Panel's RectTransform is stretched to the canvas, so its own height is a resolution-independent slide distance.
@@ -105,11 +112,10 @@ namespace tmkoc.claw
                 .SetLoops(-1, LoopType.Incremental)
                 .SetRelative(true);
         }
-        private void OnButtonClicked()
+        // Starts the next level or restarts the current one, then slides the panel away.
+        private void HidePanel()
         {
-            activeButton.gameObject.SetActive(false);
-
-            onActionButtonClicked?.Invoke();
+            onPanelHidden?.Invoke();
 
             activePanel.DOKill();
             activePanel.DOAnchorPos(OffScreenPos(activePanel), slideOutDuration)
